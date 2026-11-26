@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
-<title>Spread Pick 'Em BETA: Live square, three designs</title>
+<title>Spread Pick 'Em BETA: Live tab, new approaches</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;display=swap">
 <style>
-  /* Design preview only. One square per player per game (Joseph chose that), three ways to draw it.
-     Evergreen always means the spread pick and leather brown the winner pick, as on the Picks tab. */
+  /* Design preview only. The chosen "Field and chalk" look; evergreen = spread pick, leather brown = winner pick. */
   :root {
     --head-bg:#0f3d2e; --head-fg:#ffffff; --head-sub:#b7d3c5; --bg:#f4f6f3; --card:#ffffff; --ink:#16241d; --muted:#56655d;
-    --line:#d9e0da; --sel-ats:#1a5c40; --sel-ml:#6f4320;
+    --line:#d9e0da; --block-bg:#e7ede8; --sel-ats:#1a5c40; --sel-ml:#6f4320;
     --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d;
   }
   * { box-sizing:border-box; }
@@ -23,92 +22,110 @@
   .season-label { color:var(--head-sub); font-size:13px; margin-top:4px; padding-left:14px; }
   main { max-width:650px; margin:0 auto; padding:0 12px 56px; }
   .ask { margin:16px 0 0; font-size:14px; color:var(--muted); }
-  .option { margin:28px 0 0; padding-bottom:10px; border-bottom:2px solid var(--ink); }
+  .option { margin:30px 0 0; padding-bottom:10px; border-bottom:2px solid var(--ink); }
   .option h2 { margin:0; font:700 27px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; }
   .option p { margin:4px 0 0; font-size:13px; color:var(--muted); }
   .hint { margin:12px 0 8px; font-size:12px; color:var(--muted); }
+  .logo { display:inline-grid; place-items:center; }
+  .logo img { display:block; object-fit:contain; }
+  .mark { display:inline-block; width:11px; height:11px; }
+  .mark.ok { color:var(--ok); } .mark.bad { color:var(--bad); }
+  .live-flag { color:var(--live); font-weight:700; }
+  .live-flag::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin-right:5px; vertical-align:1px; }
+  .key { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px; font-size:12px; color:var(--muted); align-items:center; }
+  .key b { color:var(--ink); }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; border:1.5px solid var(--muted); vertical-align:middle; }
+  .dot.on { background:var(--muted); } .dot.half { background:linear-gradient(90deg, var(--muted) 50%, transparent 50%); }
 
+  /* ---- P: game cards with names (the Picks card, showing who is on each pick) ---- */
+  .standing { display:flex; flex-wrap:wrap; gap:4px 16px; margin:14px 0 0; padding:10px 12px; background:var(--card); border:1px solid var(--line); font-size:14px; }
+  .standing b { font-variant-numeric:tabular-nums; }
+  .standing .me { box-shadow:inset 0 -2px var(--head-bg); }
+  .kickoff-block { margin:18px 0 0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:var(--block-bg); border-left:3px solid var(--head-bg); }
+  .game { padding:12px 0 14px; border-top:1px solid var(--line); }
+  .kickoff-block + .game { border-top:0; }
+  .board { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,98px) minmax(0,98px); gap:6px 8px; align-items:stretch; }
+  .board .state { grid-column:1 / span 2; font-size:12px; color:var(--muted); white-space:nowrap; align-self:center; }
+  .board .col { font-size:12px; font-weight:700; text-align:center; align-self:center; }
+  .board .col.s { color:var(--sel-ats); } .board .col.w { color:var(--sel-ml); }
+  .tm { display:flex; align-items:center; gap:9px; min-width:0; }
+  .tm .logo { width:34px; height:34px; flex:0 0 34px; }
+  .tm .logo img { max-width:30px; max-height:30px; }
+  .who b { display:block; font-size:16px; font-weight:700; }
+  .who { min-width:0; }
+  .who small { display:block; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .score { align-self:center; min-width:24px; text-align:right; font:700 24px/1 'Barlow Condensed',Arial,sans-serif; font-variant-numeric:tabular-nums; }
+  .score.lost { color:var(--muted); }
+  .cell { position:relative; min-height:52px; padding:6px 7px; background:var(--card); border:1px solid var(--line); border-radius:5px; }
+  .cell .lab { display:block; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .cell.s .lab { color:var(--sel-ats); } .cell.w .lab { color:var(--sel-ml); }
+  .cell .names { display:block; margin-top:2px; font-size:13px; line-height:1.3; }
+  .cell .names .me { font-weight:700; }
+  .cell .none { color:var(--muted); }
+  .cell.ok { background:var(--ok-soft); border-color:var(--ok); } .cell.bad { background:var(--bad-soft); border-color:var(--bad); }
+  .cell.ok .lab { color:var(--ok); } .cell.bad .lab { color:var(--bad); }
+  .cell .mark { position:absolute; top:6px; right:6px; }
+  .wait { grid-column:3 / span 2; display:flex; flex-direction:column; justify-content:center; padding:6px 8px; min-height:52px; border:1px dashed var(--line); border-radius:5px; font-size:13px; color:var(--muted); }
+  .wait b { color:var(--ink); font-weight:700; }
+  .note { margin:10px 0 0; font-size:13px; }
+
+  /* ---- grids (Q and A) ---- */
   .grid-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; background:var(--card); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
   table { border-collapse:separate; border-spacing:0; table-layout:fixed; font-size:13px; }
   th, td { border-bottom:1px solid var(--line); background:var(--card); padding:0; text-align:center; }
   th.pl, td.pl { position:sticky; left:0; z-index:2; width:84px; min-width:84px; padding:6px 8px; text-align:left; border-right:1px solid var(--line); }
   th.pl { font-size:12px; font-weight:400; color:var(--muted); vertical-align:bottom; }
-  td.pl .nm { display:block; font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  td.pl .nm { display:block; font-size:14px; font-weight:700; }
   td.pl .rc { display:block; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
   td.pl.me { background:#e7f0ea; box-shadow:inset 3px 0 var(--head-bg); }
-  th.gm { position:relative; width:66px; min-width:66px; padding:8px 5px 6px; vertical-align:top; border-right:1px solid var(--line); font-weight:400; }
-  table.v1 th.gm { padding-bottom:23px; }
+  th.gm { width:66px; min-width:66px; padding:8px 5px 6px; vertical-align:top; border-right:1px solid var(--line); font-weight:400; }
   th.gm.live { box-shadow:inset 0 2px var(--live); }
   .ml { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--muted); }
-  .ml strong { font-size:14px; color:var(--ink); }
-  .ml.won { color:var(--ink); font-weight:700; }
+  .ml strong { font-size:14px; color:var(--ink); } .ml.won { color:var(--ink); font-weight:700; }
   .st { display:block; margin-top:5px; text-align:left; font-size:11px; line-height:1.35; color:var(--muted); }
   .st b { display:block; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
-  .live-flag { color:var(--live); font-weight:700; }
-  .sw { position:absolute; left:0; right:0; bottom:0; display:flex; border-top:1px solid var(--line); font-size:10px; font-weight:700; line-height:16px; }
-  .sw i { flex:1; font-style:normal; } .sw .s { color:var(--sel-ats); } .sw .w { color:var(--sel-ml); border-left:1px solid var(--line); }
-  td.c { width:66px; min-width:66px; height:62px; border-right:1px solid var(--line); }
-  .logo { display:inline-grid; place-items:center; }
-  .logo img { display:block; object-fit:contain; }
-  .mark { display:inline-block; width:11px; height:11px; }
-  .mark.ok { color:var(--ok); } .mark.bad { color:var(--bad); }
-  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; border:1.5px solid currentColor; }
-  .dot.on { background:currentColor; }
-  .dot.s { color:var(--sel-ats); } .dot.w { color:var(--sel-ml); }
+  .st .live-flag::before { display:none; }
+  td.c { width:66px; min-width:66px; border-right:1px solid var(--line); }
   .none { color:var(--muted); }
 
-  /* 1. Side by side: two halves, spread | winner */
-  table.v1 td.c > div { display:flex; height:100%; }
-  .half { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
-  .half.w { border-left:1px solid var(--line); }
-  .half.ok { background:var(--ok-soft); } .half.bad { background:var(--bad-soft); }
-  .half .logo img { max-width:24px; max-height:24px; }
+  /* Q: one call per square */
+  table.q td.c { height:64px; }
+  table.q td.c > div { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; height:100%; }
+  table.q td.c.p2 { background:var(--ok-soft); } table.q td.c.p0 { background:var(--bad-soft); }
+  table.q .one img { max-width:32px; max-height:30px; }
+  table.q .two { display:flex; align-items:center; gap:2px; }
+  table.q .two img { max-width:22px; max-height:22px; }
+  table.q .two i { width:1px; height:22px; background:var(--line); }
+  .pts { font:700 15px/1 'Barlow Condensed',Arial,sans-serif; font-variant-numeric:tabular-nums; }
+  .p2 .pts { color:var(--ok); } .p1 .pts { color:var(--ink); } .p0 .pts { color:var(--bad); }
 
-  /* 2. Logo and two chips */
-  table.v2 td.c > div { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; height:100%; }
-  table.v2 .big img { max-width:30px; max-height:28px; }
-  .chips { display:flex; gap:3px; }
-  .chip { display:inline-flex; align-items:center; justify-content:center; gap:2px; min-width:24px; height:17px; padding:0 3px; border:1.5px solid currentColor; border-radius:3px; font-size:10px; font-weight:700; line-height:1; }
-  .chip.s { color:var(--sel-ats); } .chip.w { color:var(--sel-ml); }
-  .chip.on { background:currentColor; } .chip.on b { color:#fff; }
-  .chip b { font-weight:700; }
-  .chip.ok { color:var(--ok); background:var(--ok-soft); } .chip.bad { color:var(--bad); background:var(--bad-soft); }
-  .chip .logo img { max-width:13px; max-height:13px; }
-
-  /* 3. Logo and corner marks */
-  table.v3 td.c > div { position:relative; display:grid; place-items:center; height:100%; }
-  table.v3 .big img { max-width:32px; max-height:32px; }
-  .corner { position:absolute; top:3px; display:grid; place-items:center; width:17px; height:17px; border-radius:50%; background:var(--card); border:1.5px solid currentColor; }
-  .corner.s { left:3px; color:var(--sel-ats); } .corner.w { right:3px; color:var(--sel-ml); }
-  .corner.ok { color:var(--ok); background:var(--ok-soft); } .corner.bad { color:var(--bad); background:var(--bad-soft); }
-  .corner i { font:700 9px/1 Arial,Helvetica,sans-serif; font-style:normal; }
-  .alt { position:absolute; right:3px; bottom:3px; padding:1px; background:var(--card); border:1.5px solid var(--sel-ml); border-radius:50%; }
-  .alt img { max-width:16px; max-height:16px; }
-  table.v3 .dots { display:flex; gap:10px; }
-
-  .key { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px; font-size:12px; color:var(--muted); align-items:center; }
-  .key b { color:var(--ink); } .key .s { color:var(--sel-ats); font-weight:700; } .key .w { color:var(--sel-ml); font-weight:700; }
+  /* A: two thin rows per player */
+  th.kind, td.kind { position:sticky; left:84px; z-index:2; width:22px; min-width:22px; font-size:11px; font-weight:700; border-right:1px solid var(--line); }
+  td.kind.s { color:var(--sel-ats); } td.kind.w { color:var(--sel-ml); }
+  table.a td.c { height:30px; }
+  table.a td.c.ok { background:var(--ok-soft); } table.a td.c.bad { background:var(--bad-soft); }
+  table.a td.c .logo { vertical-align:middle; } table.a td.c .logo img { max-width:22px; max-height:22px; }
+  table.a td.c .mark { margin-left:3px; vertical-align:middle; }
+  table.a tr.w td { border-bottom-width:2px; }
+  table.a tr.s td.c, table.a tr.s td.kind { border-bottom-color:#eef1ee; }
 </style>
 </head>
 <body>
-<header class="title-row"><h1 class="title">Spread Pick 'Em</h1><div class="season-label">Beta · Live square, three designs</div></header>
+<header class="title-row"><h1 class="title">Spread Pick 'Em</h1><div class="season-label">Beta · Live tab, new approaches</div></header>
 <main>
-  <p class="ask">One square per player, as you chose, drawn three ways. Same three players and five games in each: two finished, one live, two not kicked off. Green is always the spread pick and brown the winner pick, as on the Picks tab. Swipe each grid sideways, then tell Claude 1, 2 or 3.</p>
+  <p class="ask">Two new ways to show everyone's picks, and Option A from before for comparison. Same three players and five games in each: two finished, one live, two not kicked off. Tell Claude which one.</p>
 
-  <div class="option"><h2>1 · Side by side</h2><p>Each square is split in two: spread pick on the left, winner pick on the right. Each half turns green or red on its own.</p></div>
-  <div class="hint">Swipe for more games →</div>
-  <div class="grid-wrap" id="g1"></div>
-  <div class="key"><span><span class="s">S</span> spread pick (left)</span><span><span class="w">W</span> winner pick (right)</span><span><span class="dot s on"></span><span class="dot w on"></span> picked, hidden until kickoff</span><span><span class="dot s"></span> not picked yet</span></div>
+  <div class="option"><h2>New 1 · Game cards with names</h2><p>No grid. The Live tab uses the same card as the Picks tab, and each box lists who made that pick. A box turns green or red when the game is graded.</p></div>
+  <div id="p"></div>
 
-  <div class="option"><h2>2 · Logo and two chips</h2><p>One big logo for the spread pick. Underneath, an S chip and a W chip show each result. The W chip carries the other team's logo when the winner pick differs.</p></div>
+  <div class="option"><h2>New 2 · One call per square</h2><p>A grid, but each square is a single call. One logo means that team all the way: the favorite to cover, or the underdog to win. Two logos mean the underdog covers but the favorite wins. After the game the square shows the points earned.</p></div>
   <div class="hint">Swipe for more games →</div>
-  <div class="grid-wrap" id="g2"></div>
-  <div class="key"><span>Big logo: spread pick</span><span><span class="chip s on"><b>S</b></span> <span class="chip w on"><b>W</b></span> picked, hidden until kickoff</span><span><span class="chip s"><b>S</b></span> not picked yet</span></div>
+  <div class="grid-wrap" id="q"></div>
+  <div class="key"><span><b>One logo</b> that team all the way</span><span><b>Two logos</b> left covers, right wins</span><span><b>+2</b> both right</span><span><b>+1</b> one right</span><span><b>+0</b> neither</span><span><span class="dot on"></span> both picks in, hidden</span><span><span class="dot half"></span> one in</span><span><span class="dot"></span> none yet</span></div>
 
-  <div class="option"><h2>3 · Logo and corner marks</h2><p>One big logo for the spread pick. The top-left corner marks the spread result, the top-right the winner result. The other team's logo sits bottom-right when the winner pick differs.</p></div>
+  <div class="option"><h2>Option A · Two rows per player</h2><p>From the earlier round, unchanged: an S row for spread picks and a W row for winner picks.</p></div>
   <div class="hint">Swipe for more games →</div>
-  <div class="grid-wrap" id="g3"></div>
-  <div class="key"><span>Top left: spread result</span><span>Top right: winner result</span><span>Bottom right: winner pick, when different</span><span><span class="dot s on"></span><span class="dot w on"></span> picked, hidden</span></div>
+  <div class="grid-wrap" id="a"></div>
 </main>
 
 <script>
@@ -120,18 +137,18 @@
     PHI: ['NFC', 'Philadelphia Eagles'], DAL: ['NFC', 'Dallas Cowboys'], KC: ['AFC', 'Kansas City Chiefs'], BUF: ['AFC', 'Buffalo Bills'],
     DEN: ['AFC', 'Denver Broncos'], PIT: ['AFC', 'Pittsburgh Steelers']
   };
-  // Lines are the real Week 12 numbers saved Wed 11/25. Scores, the clock and every pick are made up.
+  // Lines are the real Week 12 numbers saved Wed 11/25 (home team's number). Scores, the clock and every pick are made up.
   var GAMES = [
-    { id: 'g1', away: 'GB', home: 'LAR', line: 'LAR −2.5', state: 'final', score: [20, 27], cover: 'LAR', winner: 'LAR' },
-    { id: 'g2', away: 'CHI', home: 'DET', line: 'CHI −1.5', state: 'final', score: [24, 23], cover: 'DET', winner: 'CHI' },
-    { id: 'g3', away: 'PHI', home: 'DAL', line: 'DAL −8.5', state: 'live', score: [10, 14], clock: '6:12 · 2nd' },
-    { id: 'g4', away: 'KC', home: 'BUF', line: 'BUF −3', state: 'open', when: 'Thu 8:20p' },
-    { id: 'g5', away: 'DEN', home: 'PIT', line: 'DEN −3.5', state: 'open', when: 'Fri 3p' }
+    { id: 'g1', block: 'Wednesday, Nov 25 · 8:00 PM ET', away: 'GB', home: 'LAR', homeSpread: -2.5, state: 'final', score: [20, 27], cover: 'LAR', winner: 'LAR' },
+    { id: 'g2', block: 'Thursday, Nov 26 · 1:00 PM ET', away: 'CHI', home: 'DET', homeSpread: 1.5, state: 'final', score: [24, 23], cover: 'DET', winner: 'CHI' },
+    { id: 'g3', block: 'Thursday, Nov 26 · 4:30 PM ET', away: 'PHI', home: 'DAL', homeSpread: -8.5, state: 'live', score: [10, 14], clock: '6:12 · 2nd' },
+    { id: 'g4', block: 'Thursday, Nov 26 · 8:20 PM ET', away: 'KC', home: 'BUF', homeSpread: -3, state: 'open', when: 'Thu 8:20p', tv: 'NBC' },
+    { id: 'g5', block: 'Friday, Nov 27 · 3:00 PM ET', away: 'DEN', home: 'PIT', homeSpread: 3.5, state: 'open', when: 'Fri 3p', tv: 'Prime Video' }
   ];
   var PLAYERS = [
-    { name: 'Joe', me: true, record: '3-1', picks: { g1: ['LAR', 'LAR'], g2: ['CHI', 'CHI'], g3: ['DAL', 'DAL'], g4: [true, true], g5: [true, true] } },
-    { name: 'Dylan', record: '2-2', picks: { g1: ['GB', 'LAR'], g2: ['DET', 'DET'], g3: ['PHI', 'DAL'], g4: [true, false], g5: [false, false] } },
-    { name: 'MK', record: '2-2', picks: { g1: ['GB', 'GB'], g2: ['DET', 'CHI'], g3: ['PHI', 'PHI'], g4: [false, false], g5: [true, true] } }
+    { name: 'Joe', me: true, record: '3-1', points: 3, picks: { g1: ['LAR', 'LAR'], g2: ['CHI', 'CHI'], g3: ['DAL', 'DAL'], g4: [true, true], g5: [true, true] } },
+    { name: 'Dylan', record: '2-2', points: 2, picks: { g1: ['GB', 'LAR'], g2: ['DET', 'DET'], g3: ['PHI', 'DAL'], g4: [true, false], g5: [false, false] } },
+    { name: 'MK', record: '2-2', points: 2, picks: { g1: ['GB', 'GB'], g2: ['DET', 'CHI'], g3: ['PHI', 'PHI'], g4: [false, false], g5: [true, true] } }
   ];
 
   function h(tag, attrs, kids) {
@@ -144,6 +161,11 @@
     (kids || []).forEach(function (c) { if (c) el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
     return el;
   }
+  function nick(a) { return TEAMS[a][1].split(' ').slice(-1)[0]; }
+  function sp(n) { return n === 0 ? 'PK' : (n > 0 ? '+' : '−') + Math.abs(n); }
+  function spreadOf(g, a) { return a === g.home ? g.homeSpread : -g.homeSpread; }
+  function fav(g) { return g.homeSpread < 0 ? g.home : g.away; }
+  function lineText(g) { return fav(g) + ' ' + sp(spreadOf(g, fav(g))); }
   function logo(abbr, cls) {
     var t = TEAMS[abbr], img = h('img', { alt: abbr }), slot = h('span', { class: 'logo' + (cls ? ' ' + cls : '') }, [img]);
     img.addEventListener('error', function () { slot.textContent = abbr; });
@@ -157,67 +179,100 @@
       : '<path d="M3 3.5l7 7M10 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>';
     return s;
   }
-  function dot(kind, on) { return h('span', { class: 'dot ' + kind + (on ? ' on' : ''), role: 'img', 'aria-label': (kind === 's' ? 'Spread pick ' : 'Winner pick ') + (on ? 'made, hidden until kickoff' : 'not made yet') }); }
-  function head(g, labelled) {
+  function res(g, which, pick) { if (g.state !== 'final' || !pick) return ''; return (which === 0 ? g.cover : g.winner) === pick ? 'ok' : 'bad'; }
+  function head(g) {
     var st = h('span', { class: 'st' });
     if (g.state === 'live') { st.appendChild(h('span', { class: 'live-flag', text: 'LIVE' })); st.appendChild(document.createTextNode(' ' + g.clock)); }
     else st.appendChild(document.createTextNode(g.state === 'final' ? 'Final' : g.when));
-    st.appendChild(h('b', { text: g.line }));
+    st.appendChild(h('b', { text: lineText(g) }));
     var sc = g.score || ['–', '–'];
     return h('th', { class: 'gm ' + g.state, scope: 'col' }, [
       h('span', { class: 'ml' + (g.winner === g.away ? ' won' : '') }, [h('span', { text: g.away }), h('strong', { text: String(sc[0]) })]),
-      h('span', { class: 'ml' + (g.winner === g.home ? ' won' : '') }, [h('span', { text: g.home }), h('strong', { text: String(sc[1]) })]), st,
-      labelled ? h('span', { class: 'sw', 'aria-hidden': 'true' }, [h('i', { class: 's', text: 'S' }), h('i', { class: 'w', text: 'W' })]) : null]);
+      h('span', { class: 'ml' + (g.winner === g.home ? ' won' : '') }, [h('span', { text: g.home }), h('strong', { text: String(sc[1]) })]), st]);
   }
-  function res(g, which, pick) {                  // '' | 'ok' | 'bad'
-    if (g.state !== 'final' || !pick) return '';
-    return (which === 0 ? g.cover : g.winner) === pick ? 'ok' : 'bad';
-  }
-  function grid(rootId, cls, labelled, cell) {
-    var thead = h('thead', null, [h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' })].concat(GAMES.map(function (g) { return head(g, labelled); })))]);
+  function plCell(p, rows) { return h('td', { class: 'pl' + (p.me ? ' me' : ''), rowspan: rows || null }, [h('span', { class: 'nm', text: p.name }), h('span', { class: 'rc', text: p.record })]); }
+
+  // ---- New 1: game cards with names ----
+  (function () {
+    var root = document.getElementById('p');
+    root.appendChild(h('div', { class: 'standing', 'aria-label': 'Points this week' }, PLAYERS.map(function (p) {
+      return h('span', { class: p.me ? 'me' : '' }, [p.name + ' ', h('b', { text: String(p.points) })]);
+    }).concat([h('span', { class: 'none', text: 'points this week' })])));
+    GAMES.forEach(function (g) {
+      root.appendChild(h('h3', { class: 'kickoff-block', text: g.block }));
+      var stateCell = g.state === 'live' ? h('span', { class: 'state' }, [h('span', { class: 'live-flag', text: 'LIVE' }), '  ' + g.clock])
+        : h('span', { class: 'state', text: g.state === 'final' ? 'Final' : (g.tv || '') });
+      var board = h('div', { class: 'board' }, [stateCell, h('span', { class: 'col s', text: 'Spread' }), h('span', { class: 'col w', text: 'Winner' })]);
+      [g.away, g.home].forEach(function (a, i) {
+        board.appendChild(h('div', { class: 'tm' }, [logo(a), h('span', { class: 'who' }, [h('b', { text: a }), h('small', { text: nick(a) })])]));
+        board.appendChild(g.score ? h('span', { class: 'score' + (g.state === 'final' && g.winner !== a ? ' lost' : ''), text: String(g.score[i]) }) : h('span'));
+        if (g.state === 'open') {
+          if (i === 0) {
+            var inn = PLAYERS.filter(function (p) { return p.picks[g.id][0] && p.picks[g.id][1]; }).map(function (p) { return p.name; });
+            var out = PLAYERS.filter(function (p) { return !(p.picks[g.id][0] && p.picks[g.id][1]); }).map(function (p) { return p.name; });
+            var w = h('div', { class: 'wait', style: 'grid-row: span 2' }, [h('span', null, ['Picks show at kickoff.']),
+              inn.length ? h('span', null, [h('b', { text: 'In: ' }), inn.join(', ')]) : null,
+              out.length ? h('span', null, [h('b', { text: 'Not yet: ' }), out.join(', ')]) : null]);
+            board.appendChild(w);
+          }
+          return;
+        }
+        [0, 1].forEach(function (which) {
+          var who = PLAYERS.filter(function (p) { return p.picks[g.id][which] === a; });
+          var r = g.state === 'final' ? ((which === 0 ? g.cover : g.winner) === a ? 'ok' : 'bad') : '';
+          var names = h('span', { class: 'names' });
+          if (!who.length) names.appendChild(h('span', { class: 'none', text: '—' }));
+          who.forEach(function (p, k) { if (k) names.appendChild(document.createTextNode(', ')); names.appendChild(h('span', { class: p.me ? 'me' : '', text: p.name })); });
+          board.appendChild(h('div', { class: 'cell ' + (which === 0 ? 's' : 'w') + (r && who.length ? ' ' + r : '') }, [
+            h('span', { class: 'lab', text: which === 0 ? sp(spreadOf(g, a)) : 'Win' }), names, r && who.length ? mark(r === 'ok') : null]));
+        });
+      });
+      var card = h('div', { class: 'game' }, [board]);
+      if (g.state === 'final') card.appendChild(h('p', { class: 'note', text: g.winner + ' won ' + Math.max(g.score[0], g.score[1]) + '–' + Math.min(g.score[0], g.score[1]) +
+        (g.cover === g.winner ? ' and covered ' + sp(spreadOf(g, g.winner)) + '.' : ', but ' + g.cover + ' covered ' + sp(spreadOf(g, g.cover)) + '.') }));
+      root.appendChild(card);
+    });
+  })();
+
+  // ---- New 2: one call per square ----
+  (function () {
+    var thead = h('thead', null, [h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' })].concat(GAMES.map(head)))]);
     var tbody = h('tbody');
     PLAYERS.forEach(function (p) {
-      var tr = h('tr', null, [h('td', { class: 'pl' + (p.me ? ' me' : '') }, [h('span', { class: 'nm', text: p.name }), h('span', { class: 'rc', text: p.record })])]);
+      var tr = h('tr', null, [plCell(p)]);
       GAMES.forEach(function (g) {
         var s = p.picks[g.id][0], w = p.picks[g.id][1];
-        tr.appendChild(h('td', { class: 'c' }, [cell(g, s, w, res(g, 0, s), res(g, 1, w))]));
+        if (g.state === 'open') { tr.appendChild(h('td', { class: 'c' }, [h('div', null, [h('span', { class: 'dot' + (s && w ? ' on' : (s || w ? ' half' : '')) })])])); return; }
+        var pts = g.state === 'final' ? (res(g, 0, s) === 'ok' ? 1 : 0) + (res(g, 1, w) === 'ok' ? 1 : 0) : null;
+        var body = (s && w && s !== w) ? h('span', { class: 'two' }, [logo(s), h('i'), logo(w)]) : (s || w ? logo(s || w, 'one') : h('span', { class: 'none', text: '—' }));
+        tr.appendChild(h('td', { class: 'c' + (pts !== null ? ' p' + pts : '') }, [h('div', null, [body, pts !== null ? h('span', { class: 'pts', text: '+' + pts }) : null])]));
       });
       tbody.appendChild(tr);
     });
-    document.getElementById(rootId).appendChild(h('table', { class: cls }, [thead, tbody]));
-  }
+    document.getElementById('q').appendChild(h('table', { class: 'q' }, [thead, tbody]));
+  })();
 
-  // 1. Side by side
-  grid('g1', 'v1', true, function (g, s, w, rs, rw) {
-    function half(kind, pick, r) {
-      if (g.state === 'open') return h('div', { class: 'half ' + kind }, [dot(kind, pick)]);
-      if (!pick) return h('div', { class: 'half ' + kind + ' none', text: '—' });
-      return h('div', { class: 'half ' + kind + (r ? ' ' + r : '') }, [logo(pick), r ? mark(r === 'ok') : null]);
-    }
-    return h('div', null, [half('s', s, rs), half('w', w, rw)]);
-  });
-
-  // 2. Logo and two chips
-  grid('g2', 'v2', false, function (g, s, w, rs, rw) {
-    function chip(kind, pick, r, showLogo) {
-      if (g.state === 'open') return h('span', { class: 'chip ' + kind + (pick ? ' on' : '') }, [h('b', { text: kind.toUpperCase() })]);
-      return h('span', { class: 'chip ' + kind + (r ? ' ' + r : '') }, [showLogo ? logo(pick) : h('b', { text: kind.toUpperCase() }), r ? mark(r === 'ok') : null]);
-    }
-    var kids = [];
-    if (g.state !== 'open') kids.push(s ? logo(s, 'big') : h('span', { class: 'none', text: '—' }));
-    kids.push(h('span', { class: 'chips' }, [chip('s', s, rs, false), chip('w', w, rw, !!w && w !== s)]));
-    return h('div', null, kids);
-  });
-
-  // 3. Logo and corner marks
-  grid('g3', 'v3', false, function (g, s, w, rs, rw) {
-    if (g.state === 'open') return h('div', null, [h('span', { class: 'dots' }, [dot('s', s), dot('w', w)])]);
-    var kids = [s ? logo(s, 'big') : h('span', { class: 'none', text: '—' })];
-    if (rs) kids.push(h('span', { class: 'corner s ' + rs }, [mark(rs === 'ok')]));
-    if (rw) kids.push(h('span', { class: 'corner w ' + rw }, [mark(rw === 'ok')]));
-    if (w && w !== s) kids.push(logo(w, 'alt'));
-    return h('div', null, kids);
-  });
+  // ---- Option A: two thin rows per player ----
+  (function () {
+    var thead = h('thead', null, [h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' }), h('th', { class: 'kind', scope: 'col' })].concat(GAMES.map(head)))]);
+    var tbody = h('tbody');
+    PLAYERS.forEach(function (p) {
+      [0, 1].forEach(function (which) {
+        var tr = h('tr', { class: which === 0 ? 's' : 'w' });
+        if (which === 0) tr.appendChild(plCell(p, 2));
+        tr.appendChild(h('td', { class: 'kind ' + (which === 0 ? 's' : 'w'), text: which === 0 ? 'S' : 'W' }));
+        GAMES.forEach(function (g) {
+          var v = p.picks[g.id][which], r = res(g, which, v), td = h('td', { class: 'c' + (r ? ' ' + r : '') });
+          if (g.state === 'open') td.appendChild(h('span', { class: 'dot' + (v ? ' on' : '') }));
+          else if (!v) td.appendChild(h('span', { class: 'none', text: '—' }));
+          else { td.appendChild(logo(v)); if (r) td.appendChild(mark(r === 'ok')); }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    });
+    document.getElementById('a').appendChild(h('table', { class: 'a' }, [thead, tbody]));
+  })();
 })();
 </script>
 </body>
