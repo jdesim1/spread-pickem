@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-yruI8Qmwt0IN2FSEmDt3ktHuBO7kxCkreYPjPw2coa0='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://cdn.jsdelivr.net https://a.espncdn.com; connect-src https://script.google.com https://script.googleusercontent.com 'self'; base-uri 'none'; form-action 'none'">
-<meta name="spread-beta-build" content="c2702b56f64e">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-tVECdTY7kcYMNcJX+SqdyD1YRx81OXB9aUYvHGuRBxU='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://cdn.jsdelivr.net https://a.espncdn.com; connect-src https://script.google.com https://script.googleusercontent.com 'self'; base-uri 'none'; form-action 'none'">
+<meta name="spread-beta-build" content="d173c186bb38">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
 <title>Lowry Road Underground</title>
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://script.googleusercontent.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;family=Yellowtail&amp;display=swap">
 <style>
   /*
    * Lowry Road Underground. Layout, type and components are the pool's "Broadcast light" page (WebApp.html).
@@ -45,8 +45,12 @@
   .brand { flex:1; min-width:0; display:flex; align-items:flex-end; gap:10px; }
   .house { display:block; flex:0 0 auto; height:var(--house-h); width:auto; }
   .title { margin:0 0 11px; font:700 25px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; letter-spacing:.2px; text-transform:uppercase; white-space:nowrap; }
-  .soil { background:var(--soil); color:var(--head-fg); border-top:2px solid var(--rule); padding:8px 14px 9px; display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
-  .soil .under { margin-left:calc(var(--house-h) * 100 / 56 + 10px); font:700 17px/1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; letter-spacing:.3em; text-transform:uppercase; }
+  /* The cool room (chosen 2026-11-26, "B"; the pixel reference is spread-beta/dev/coolroom-mockup.html): the band is as
+     tall as the house, and a lit basement room with a couch and the game on TV hangs right under the house, the
+     birch's roots under the tree. The word is a neon sign ("4 · Neon sign"). */
+  .soil { position:relative; min-height:var(--house-h); background:var(--soil); color:var(--head-fg); border-top:2px solid var(--rule); padding:0 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .soil .cool { position:absolute; left:14px; top:0; height:var(--house-h); width:calc(var(--house-h) * 100 / 56); display:block; }
+  .soil .under { margin-left:calc(var(--house-h) * 100 / 56 + 10px); font:400 27px/1 'Yellowtail',cursive; letter-spacing:.01em; text-transform:none; color:#fff4f2; text-shadow:0 0 5px rgba(255,140,124,.95), 0 0 13px rgba(214,64,50,.9); }
   .season-label { color:var(--head-sub); font-size:13px; margin:0; padding:0; }
   .account { position:relative; flex-shrink:0; margin-bottom:3px; }
   .account summary { list-style:none; min-height:44px; display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; white-space:nowrap; }
@@ -76,11 +80,11 @@
   .soon strong { font-weight:700; }
 
   /* ---- kickoff blocks + the two-pick game card (layout A: teams as rows) ---- */
-  .kickoff-block { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:22px 0 0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:var(--block-bg); border-left:3px solid var(--block-rule); }
+  .kickoff-block { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:14px 0 0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:var(--block-bg); border-left:3px solid var(--block-rule); }
   .soon[hidden] + .kickoff-block { margin-top:6px; }
   .live-flag { color:var(--live); letter-spacing:.3px; white-space:nowrap; }
   .live-flag::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin-right:5px; vertical-align:1px; }
-  .game { padding:14px 0; border-top:1px solid var(--line); }
+  .game { padding:12px 0; border-top:1px solid var(--line); }
   .kickoff-block + .game { border-top:0; }
   .board { display:grid; grid-template-columns:minmax(0,1fr) auto 78px 78px; gap:8px; align-items:center; }
   .board .col { font-size:12px; color:var(--muted); text-align:center; }
@@ -118,7 +122,7 @@
   .game.out .logo img { opacity:.45; }
 
   /* ---- total points ---- */
-  .tb-card { margin-top:22px; padding:18px; background:var(--card); border:1px solid var(--line); border-radius:5px; }
+  .tb-card { margin-top:14px; padding:18px; background:var(--card); border:1px solid var(--line); border-radius:5px; }
   .tb-title { font-size:13px; color:var(--muted); }
   .tb-game { font-size:16px; font-weight:700; margin:2px 0 10px; }
   .tb-card input { width:100%; min-height:52px; font-size:22px; font-weight:700; text-align:center; border:1px solid var(--line); border-radius:4px; padding:8px 12px; background:var(--card); color:var(--ink); -webkit-appearance:none; appearance:none; }
@@ -328,7 +332,8 @@
 
   @media (min-width:651px) {
     .title-row { padding:12px 22px 0; gap:16px; }
-    .soil { padding:8px 22px 9px; }
+    .soil { padding:0 22px; }
+    .soil .cool { left:22px; }
     .title { font-size:29px; }
     .tabs { gap:28px; padding:0 22px; }
     .tab { flex:0 0 auto; padding:13px 2px 11px; }
@@ -541,6 +546,43 @@
     ['M14.9 27 L9.2 17.5', 'M15.3 23 L21 13.5', 'M14.8 19 L12.6 9.5'].forEach(function (d) { part(branches, 'path', { d: d }); });
     part(svg, 'path', { d: 'M12.4 56 L17 56 L15.7 15 L14.3 15 Z', fill: '#f4f5f3' });
     rects(part(svg, 'g', { fill: '#1c2b24' }), [['12.7', '49.2', '2.5', '1'], ['14.9', '42.6', '1.9', '1'], ['13.3', '36', '2', '1'], ['14.8', '29.6', '1.5', '1'], ['13.9', '23.4', '1.3', '.9']]);
+    return svg;
+  }
+
+  // The cool room in the band, right under the house: a lit basement room with a couch and the game on TV, and the
+  // birch's roots under the tree. Its top edge (y = 0) is the road line, and its x positions match the house above.
+  // The shapes are copied from #room-shell, #room-couch, #room-tv and #birch-roots in
+  // spread-beta/dev/coolroom-mockup.html (the symbol #cool-b), in the same order, colors written out as plain values
+  // like the house's. It is decoration only: the name and the house already say what the header is.
+  function coolRoomDrawing() {
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    function part(parent, tag, attrs) {
+      var el = document.createElementNS(SVG_NS, tag);
+      Object.keys(attrs).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+      parent.appendChild(el);
+      return el;
+    }
+    svg.setAttribute('class', 'cool');
+    svg.setAttribute('viewBox', '0 0 100 56');
+    svg.setAttribute('aria-hidden', 'true');
+    // the room: its lit wall, and the white outline of its sides and floor
+    part(svg, 'rect', { x: '30', y: '0', width: '48', height: '44', fill: '#1d5442' });
+    part(svg, 'path', { d: 'M30 0 V44 H78 V0', fill: 'none', stroke: '#fff', 'stroke-width': '1.3', 'stroke-linejoin': 'round' });
+    // the couch: back, seat, arm, two legs
+    part(svg, 'rect', { x: '32.6', y: '23.5', width: '3.3', height: '16.5', rx: '1', fill: '#b9382d' });
+    part(svg, 'rect', { x: '32.6', y: '32.8', width: '17.2', height: '7.2', rx: '1', fill: '#b9382d' });
+    part(svg, 'rect', { x: '47.2', y: '28.8', width: '2.6', height: '6', rx: '.8', fill: '#b9382d' });
+    part(svg, 'rect', { x: '33.4', y: '40', width: '1.5', height: '4', fill: '#8e2a22' });
+    part(svg, 'rect', { x: '47.4', y: '40', width: '1.5', height: '4', fill: '#8e2a22' });
+    // the TV: its glow, the set, the field with its yard lines, and the stand
+    part(svg, 'rect', { x: '54', y: '9.8', width: '22', height: '17.4', fill: '#fff', opacity: '.15' });
+    part(svg, 'rect', { x: '55.5', y: '11.3', width: '19', height: '14.2', rx: '.8', fill: '#fff' });
+    part(svg, 'rect', { x: '56.8', y: '12.6', width: '16.4', height: '11.6', fill: '#2f8f5b' });
+    part(svg, 'path', { d: 'M65 12.6 V24.2 M60.9 15.2 V21.6 M69.1 15.2 V21.6', stroke: '#fff', 'stroke-width': '.8', fill: 'none' });
+    part(svg, 'path', { d: 'M65 25.5 V37 M58.5 37.6 H71.5', stroke: '#fff', 'stroke-width': '1.3', 'stroke-linecap': 'round', fill: 'none' });
+    // the birch's roots, under the trunk
+    var roots = part(svg, 'g', { fill: 'none', stroke: '#f4f5f3', 'stroke-width': '1', 'stroke-linecap': 'round', opacity: '.85' });
+    ['M14.7 0 C14 7 10.5 10 8.5 19', 'M14.7 0 C15.6 8 18.5 12 19.5 23', 'M14.7 2 C14.9 9 13.6 15 14.2 28'].forEach(function (d) { part(roots, 'path', { d: d }); });
     return svg;
   }
 
@@ -1087,7 +1129,7 @@
     });
     app.appendChild(h('header', { class: 'top' }, [
       h('div', { class: 'title-row' }, [h('div', { class: 'brand' }, [houseDrawing(), h('h1', { class: 'title', 'aria-label': 'Lowry Road Underground', text: 'Lowry Road' })]), els.account]),
-      h('div', { class: 'soil' }, [h('div', { class: 'under', 'aria-hidden': 'true', text: 'Underground' }), els.seasonLabel]),
+      h('div', { class: 'soil' }, [coolRoomDrawing(), h('div', { class: 'under', 'aria-hidden': 'true', text: 'Underground' }), els.seasonLabel]),
       els.tabs
     ]));
 
@@ -1523,7 +1565,9 @@
       return;
     }
     if (g.locked) note('', line ? 'Kicked off. Picks are locked at ' + lineText(g) + '.' : 'Kicked off. Picks are locked.');
-    else if (favLock) note('', [h('strong', { text: fav + ' ' + spreadText(spreadOf(g, fav)) }), ' locks ' + fav + ' as your winner.']);
+    // Taking the favorite locks the winner: no note for it (dropped 2026-11-26 as redundant). The padlock on the Win
+    // button and the tap's message say it. This branch stays in the chain so that no other note shows in that state.
+    else if (favLock) { /* nothing drawn */ }
     // Half a game: taking a favorite fills in the winner and says so, so taking an underdog has to ask for it.
     else if (line && p.ats && !p.ml) note('', 'Now pick the winner: tap Win for ' + g.away + ' or ' + g.home + '.');
     else if (line && p.ml && !p.ats) note('', 'Still needs a spread pick.');
