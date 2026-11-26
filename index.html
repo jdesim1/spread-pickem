@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
-<title>Spread Pick 'Em BETA: Live grid options</title>
+<title>Spread Pick 'Em BETA: Live square, three designs</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;display=swap">
 <style>
-  /* Design preview only. Colors are the chosen "Field and chalk" look. */
+  /* Design preview only. One square per player per game (Joseph chose that), three ways to draw it.
+     Evergreen always means the spread pick and leather brown the winner pick, as on the Picks tab. */
   :root {
     --head-bg:#0f3d2e; --head-fg:#ffffff; --head-sub:#b7d3c5; --bg:#f4f6f3; --card:#ffffff; --ink:#16241d; --muted:#56655d;
-    --line:#d9e0da; --block-bg:#e7ede8; --sel-ats:#1a5c40; --sel-ml:#6f4320;
-    --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d; --link:#0f5b40;
+    --line:#d9e0da; --sel-ats:#1a5c40; --sel-ml:#6f4320;
+    --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d;
   }
   * { box-sizing:border-box; }
   html, body { margin:0; padding:0; }
@@ -35,9 +36,8 @@
   td.pl .nm { display:block; font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   td.pl .rc { display:block; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
   td.pl.me { background:#e7f0ea; box-shadow:inset 3px 0 var(--head-bg); }
-  th.kind, td.kind { position:sticky; left:84px; z-index:2; width:22px; min-width:22px; font-size:11px; font-weight:700; color:var(--muted); border-right:1px solid var(--line); }
-  td.kind.s { color:var(--sel-ats); } td.kind.w { color:var(--sel-ml); }
-  th.gm { width:60px; min-width:60px; padding:8px 5px; vertical-align:top; border-right:1px solid var(--line); font-weight:400; }
+  th.gm { position:relative; width:66px; min-width:66px; padding:8px 5px 6px; vertical-align:top; border-right:1px solid var(--line); font-weight:400; }
+  table.v1 th.gm { padding-bottom:23px; }
   th.gm.live { box-shadow:inset 0 2px var(--live); }
   .ml { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--muted); }
   .ml strong { font-size:14px; color:var(--ink); }
@@ -45,48 +45,70 @@
   .st { display:block; margin-top:5px; text-align:left; font-size:11px; line-height:1.35; color:var(--muted); }
   .st b { display:block; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
   .live-flag { color:var(--live); font-weight:700; }
-  td.c { width:60px; min-width:60px; border-right:1px solid var(--line); }
-  td.c.ok { background:var(--ok-soft); } td.c.bad { background:var(--bad-soft); }
-  .logo { display:inline-grid; place-items:center; vertical-align:middle; }
+  .sw { position:absolute; left:0; right:0; bottom:0; display:flex; border-top:1px solid var(--line); font-size:10px; font-weight:700; line-height:16px; }
+  .sw i { flex:1; font-style:normal; } .sw .s { color:var(--sel-ats); } .sw .w { color:var(--sel-ml); border-left:1px solid var(--line); }
+  td.c { width:66px; min-width:66px; height:62px; border-right:1px solid var(--line); }
+  .logo { display:inline-grid; place-items:center; }
   .logo img { display:block; object-fit:contain; }
-  .dot { display:inline-block; width:9px; height:9px; border:1.5px solid var(--muted); border-radius:50%; vertical-align:middle; }
-  .dot.on { background:var(--muted); }
-  .mark { display:inline-block; width:11px; height:11px; vertical-align:middle; }
-  .ok .mark, .mark.ok { color:var(--ok); } .bad .mark, .mark.bad { color:var(--bad); }
+  .mark { display:inline-block; width:11px; height:11px; }
+  .mark.ok { color:var(--ok); } .mark.bad { color:var(--bad); }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; border:1.5px solid currentColor; }
+  .dot.on { background:currentColor; }
+  .dot.s { color:var(--sel-ats); } .dot.w { color:var(--sel-ml); }
+  .none { color:var(--muted); }
 
-  /* A: two thin rows per player */
-  table.a td.c { height:29px; }
-  table.a td.c .logo img { max-width:22px; max-height:22px; }
-  table.a td.c .mark { margin-left:3px; }
-  table.a tr.w td { border-bottom-width:2px; }
-  table.a tr.s td.c, table.a tr.s td.kind { border-bottom-color:#eef1ee; }
+  /* 1. Side by side: two halves, spread | winner */
+  table.v1 td.c > div { display:flex; height:100%; }
+  .half { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
+  .half.w { border-left:1px solid var(--line); }
+  .half.ok { background:var(--ok-soft); } .half.bad { background:var(--bad-soft); }
+  .half .logo img { max-width:24px; max-height:24px; }
 
-  /* B: one square per player */
-  table.b td.c { height:58px; position:relative; }
-  table.b td.c .big img { max-width:30px; max-height:30px; }
-  table.b td.c .alt { position:absolute; top:3px; right:3px; padding:1px; background:var(--card); border:1px solid var(--line); border-radius:50%; }
-  table.b td.c .alt img { max-width:16px; max-height:16px; }
-  table.b td.c .res { display:flex; justify-content:center; gap:6px; margin-top:2px; font-size:10px; font-weight:700; color:var(--muted); }
-  table.b td.c .res span { display:inline-flex; align-items:center; gap:1px; }
+  /* 2. Logo and two chips */
+  table.v2 td.c > div { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; height:100%; }
+  table.v2 .big img { max-width:30px; max-height:28px; }
+  .chips { display:flex; gap:3px; }
+  .chip { display:inline-flex; align-items:center; justify-content:center; gap:2px; min-width:24px; height:17px; padding:0 3px; border:1.5px solid currentColor; border-radius:3px; font-size:10px; font-weight:700; line-height:1; }
+  .chip.s { color:var(--sel-ats); } .chip.w { color:var(--sel-ml); }
+  .chip.on { background:currentColor; } .chip.on b { color:#fff; }
+  .chip b { font-weight:700; }
+  .chip.ok { color:var(--ok); background:var(--ok-soft); } .chip.bad { color:var(--bad); background:var(--bad-soft); }
+  .chip .logo img { max-width:13px; max-height:13px; }
 
-  .key { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px; font-size:12px; color:var(--muted); }
-  .key b { color:var(--ink); }
+  /* 3. Logo and corner marks */
+  table.v3 td.c > div { position:relative; display:grid; place-items:center; height:100%; }
+  table.v3 .big img { max-width:32px; max-height:32px; }
+  .corner { position:absolute; top:3px; display:grid; place-items:center; width:17px; height:17px; border-radius:50%; background:var(--card); border:1.5px solid currentColor; }
+  .corner.s { left:3px; color:var(--sel-ats); } .corner.w { right:3px; color:var(--sel-ml); }
+  .corner.ok { color:var(--ok); background:var(--ok-soft); } .corner.bad { color:var(--bad); background:var(--bad-soft); }
+  .corner i { font:700 9px/1 Arial,Helvetica,sans-serif; font-style:normal; }
+  .alt { position:absolute; right:3px; bottom:3px; padding:1px; background:var(--card); border:1.5px solid var(--sel-ml); border-radius:50%; }
+  .alt img { max-width:16px; max-height:16px; }
+  table.v3 .dots { display:flex; gap:10px; }
+
+  .key { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px; font-size:12px; color:var(--muted); align-items:center; }
+  .key b { color:var(--ink); } .key .s { color:var(--sel-ats); font-weight:700; } .key .w { color:var(--sel-ml); font-weight:700; }
 </style>
 </head>
 <body>
-<header class="title-row"><h1 class="title">Spread Pick 'Em</h1><div class="season-label">Beta · Live grid options</div></header>
+<header class="title-row"><h1 class="title">Spread Pick 'Em</h1><div class="season-label">Beta · Live square, three designs</div></header>
 <main>
-  <p class="ask">The Live grid has to show two picks in every square now. Two ways to do it, with the same three players and five games. Swipe each grid sideways, then tell Claude A or B.</p>
+  <p class="ask">One square per player, as you chose, drawn three ways. Same three players and five games in each: two finished, one live, two not kicked off. Green is always the spread pick and brown the winner pick, as on the Picks tab. Swipe each grid sideways, then tell Claude 1, 2 or 3.</p>
 
-  <div class="option"><h2>Option A</h2><p>Two thin rows per player: S is the spread pick, W is the winner pick.</p></div>
+  <div class="option"><h2>1 · Side by side</h2><p>Each square is split in two: spread pick on the left, winner pick on the right. Each half turns green or red on its own.</p></div>
   <div class="hint">Swipe for more games →</div>
-  <div class="grid-wrap" id="grid-a"></div>
-  <div class="key"><span><b>S</b> spread pick</span><span><b>W</b> winner pick</span><span>Green with a tick: right</span><span>Red with a cross: wrong</span><span><span class="dot on"></span> picked, hidden until kickoff</span><span><span class="dot"></span> not picked yet</span></div>
+  <div class="grid-wrap" id="g1"></div>
+  <div class="key"><span><span class="s">S</span> spread pick (left)</span><span><span class="w">W</span> winner pick (right)</span><span><span class="dot s on"></span><span class="dot w on"></span> picked, hidden until kickoff</span><span><span class="dot s"></span> not picked yet</span></div>
 
-  <div class="option"><h2>Option B</h2><p>One square per player: the big logo is the spread pick; a small logo in the corner appears only when the winner pick is the other team.</p></div>
+  <div class="option"><h2>2 · Logo and two chips</h2><p>One big logo for the spread pick. Underneath, an S chip and a W chip show each result. The W chip carries the other team's logo when the winner pick differs.</p></div>
   <div class="hint">Swipe for more games →</div>
-  <div class="grid-wrap" id="grid-b"></div>
-  <div class="key"><span>Big logo: spread pick</span><span>Corner logo: winner pick, when different</span><span><b>S</b> and <b>W</b> with a tick or cross: each result</span><span><span class="dot on"></span> picked, hidden</span><span><span class="dot"></span> not picked yet</span></div>
+  <div class="grid-wrap" id="g2"></div>
+  <div class="key"><span>Big logo: spread pick</span><span><span class="chip s on"><b>S</b></span> <span class="chip w on"><b>W</b></span> picked, hidden until kickoff</span><span><span class="chip s"><b>S</b></span> not picked yet</span></div>
+
+  <div class="option"><h2>3 · Logo and corner marks</h2><p>One big logo for the spread pick. The top-left corner marks the spread result, the top-right the winner result. The other team's logo sits bottom-right when the winner pick differs.</p></div>
+  <div class="hint">Swipe for more games →</div>
+  <div class="grid-wrap" id="g3"></div>
+  <div class="key"><span>Top left: spread result</span><span>Top right: winner result</span><span>Bottom right: winner pick, when different</span><span><span class="dot s on"></span><span class="dot w on"></span> picked, hidden</span></div>
 </main>
 
 <script>
@@ -123,20 +145,20 @@
     return el;
   }
   function logo(abbr, cls) {
-    var t = TEAMS[abbr], img = h('img', { alt: abbr }), slot = h('span', { class: 'logo ' + (cls || '') }, [img]);
+    var t = TEAMS[abbr], img = h('img', { alt: abbr }), slot = h('span', { class: 'logo' + (cls ? ' ' + cls : '') }, [img]);
     img.addEventListener('error', function () { slot.textContent = abbr; });
     img.src = LOGO + t[0] + '/' + encodeURIComponent(t[1]) + '/' + t[1].toLowerCase().replace(/ /g, '-') + '.svg';
     return slot;
   }
   function mark(ok) {
-    var s = h('span', { class: 'mark ' + (ok ? 'ok' : 'bad'), 'aria-label': ok ? 'right' : 'wrong' });
+    var s = h('span', { class: 'mark ' + (ok ? 'ok' : 'bad'), role: 'img', 'aria-label': ok ? 'right' : 'wrong' });
     s.innerHTML = '<svg viewBox="0 0 13 13" width="11" height="11">' + (ok
-      ? '<path d="M2.5 7l2.8 2.8L10.5 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
-      : '<path d="M3 3.5l7 7M10 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>') + '</svg>';
+      ? '<path d="M2.5 7l2.8 2.8L10.5 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
+      : '<path d="M3 3.5l7 7M10 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>';
     return s;
   }
-  function dot(on) { return h('span', { class: 'dot' + (on ? ' on' : ''), 'aria-label': on ? 'picked, hidden until kickoff' : 'not picked yet' }); }
-  function head(g) {
+  function dot(kind, on) { return h('span', { class: 'dot ' + kind + (on ? ' on' : ''), role: 'img', 'aria-label': (kind === 's' ? 'Spread pick ' : 'Winner pick ') + (on ? 'made, hidden until kickoff' : 'not made yet') }); }
+  function head(g, labelled) {
     var st = h('span', { class: 'st' });
     if (g.state === 'live') { st.appendChild(h('span', { class: 'live-flag', text: 'LIVE' })); st.appendChild(document.createTextNode(' ' + g.clock)); }
     else st.appendChild(document.createTextNode(g.state === 'final' ? 'Final' : g.when));
@@ -144,61 +166,58 @@
     var sc = g.score || ['–', '–'];
     return h('th', { class: 'gm ' + g.state, scope: 'col' }, [
       h('span', { class: 'ml' + (g.winner === g.away ? ' won' : '') }, [h('span', { text: g.away }), h('strong', { text: String(sc[0]) })]),
-      h('span', { class: 'ml' + (g.winner === g.home ? ' won' : '') }, [h('span', { text: g.home }), h('strong', { text: String(sc[1]) })]), st]);
+      h('span', { class: 'ml' + (g.winner === g.home ? ' won' : '') }, [h('span', { text: g.home }), h('strong', { text: String(sc[1]) })]), st,
+      labelled ? h('span', { class: 'sw', 'aria-hidden': 'true' }, [h('i', { class: 's', text: 'S' }), h('i', { class: 'w', text: 'W' })]) : null]);
   }
-  function result(g, which, pick) {              // '' | 'ok' | 'bad'
+  function res(g, which, pick) {                  // '' | 'ok' | 'bad'
     if (g.state !== 'final' || !pick) return '';
     return (which === 0 ? g.cover : g.winner) === pick ? 'ok' : 'bad';
   }
-  function playerCell(p, rows) {
-    return h('td', { class: 'pl' + (p.me ? ' me' : ''), rowspan: rows || null }, [h('span', { class: 'nm', text: p.name }), h('span', { class: 'rc', text: p.record })]);
-  }
-
-  // A: two thin rows per player
-  (function () {
-    var thead = h('thead', null, [h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' }), h('th', { class: 'kind', scope: 'col' })].concat(GAMES.map(head)))]);
+  function grid(rootId, cls, labelled, cell) {
+    var thead = h('thead', null, [h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' })].concat(GAMES.map(function (g) { return head(g, labelled); })))]);
     var tbody = h('tbody');
     PLAYERS.forEach(function (p) {
-      [0, 1].forEach(function (which) {
-        var tr = h('tr', { class: which === 0 ? 's' : 'w' });
-        if (which === 0) tr.appendChild(playerCell(p, 2));
-        tr.appendChild(h('td', { class: 'kind ' + (which === 0 ? 's' : 'w'), text: which === 0 ? 'S' : 'W' }));
-        GAMES.forEach(function (g) {
-          var v = p.picks[g.id][which], r = result(g, which, v);
-          var td = h('td', { class: 'c' + (r ? ' ' + r : '') });
-          if (g.state === 'open') td.appendChild(dot(v));
-          else if (!v) td.appendChild(document.createTextNode('—'));
-          else { td.appendChild(logo(v)); if (r) td.appendChild(mark(r === 'ok')); }
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-    });
-    document.getElementById('grid-a').appendChild(h('table', { class: 'a', 'aria-label': 'Option A' }, [thead, tbody]));
-  })();
-
-  // B: one square per player
-  (function () {
-    var thead = h('thead', null, [h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' })].concat(GAMES.map(head)))]);
-    var tbody = h('tbody');
-    PLAYERS.forEach(function (p) {
-      var tr = h('tr', null, [playerCell(p)]);
+      var tr = h('tr', null, [h('td', { class: 'pl' + (p.me ? ' me' : '') }, [h('span', { class: 'nm', text: p.name }), h('span', { class: 'rc', text: p.record })])]);
       GAMES.forEach(function (g) {
-        var s = p.picks[g.id][0], w = p.picks[g.id][1], td = h('td', { class: 'c' });
-        if (g.state === 'open') {
-          td.appendChild(h('span', { class: 'res' }, [h('span', null, ['S ', dot(s)]), h('span', null, ['W ', dot(w)])]));
-        } else {
-          td.appendChild(logo(s, 'big'));
-          if (w && w !== s) td.appendChild(logo(w, 'alt'));
-          var rs = result(g, 0, s), rw = result(g, 1, w);
-          if (rs || rw) td.appendChild(h('span', { class: 'res' }, [h('span', null, ['S', mark(rs === 'ok')]), h('span', null, ['W', mark(rw === 'ok')])]));
-        }
-        tr.appendChild(td);
+        var s = p.picks[g.id][0], w = p.picks[g.id][1];
+        tr.appendChild(h('td', { class: 'c' }, [cell(g, s, w, res(g, 0, s), res(g, 1, w))]));
       });
       tbody.appendChild(tr);
     });
-    document.getElementById('grid-b').appendChild(h('table', { class: 'b', 'aria-label': 'Option B' }, [thead, tbody]));
-  })();
+    document.getElementById(rootId).appendChild(h('table', { class: cls }, [thead, tbody]));
+  }
+
+  // 1. Side by side
+  grid('g1', 'v1', true, function (g, s, w, rs, rw) {
+    function half(kind, pick, r) {
+      if (g.state === 'open') return h('div', { class: 'half ' + kind }, [dot(kind, pick)]);
+      if (!pick) return h('div', { class: 'half ' + kind + ' none', text: '—' });
+      return h('div', { class: 'half ' + kind + (r ? ' ' + r : '') }, [logo(pick), r ? mark(r === 'ok') : null]);
+    }
+    return h('div', null, [half('s', s, rs), half('w', w, rw)]);
+  });
+
+  // 2. Logo and two chips
+  grid('g2', 'v2', false, function (g, s, w, rs, rw) {
+    function chip(kind, pick, r, showLogo) {
+      if (g.state === 'open') return h('span', { class: 'chip ' + kind + (pick ? ' on' : '') }, [h('b', { text: kind.toUpperCase() })]);
+      return h('span', { class: 'chip ' + kind + (r ? ' ' + r : '') }, [showLogo ? logo(pick) : h('b', { text: kind.toUpperCase() }), r ? mark(r === 'ok') : null]);
+    }
+    var kids = [];
+    if (g.state !== 'open') kids.push(s ? logo(s, 'big') : h('span', { class: 'none', text: '—' }));
+    kids.push(h('span', { class: 'chips' }, [chip('s', s, rs, false), chip('w', w, rw, !!w && w !== s)]));
+    return h('div', null, kids);
+  });
+
+  // 3. Logo and corner marks
+  grid('g3', 'v3', false, function (g, s, w, rs, rw) {
+    if (g.state === 'open') return h('div', null, [h('span', { class: 'dots' }, [dot('s', s), dot('w', w)])]);
+    var kids = [s ? logo(s, 'big') : h('span', { class: 'none', text: '—' })];
+    if (rs) kids.push(h('span', { class: 'corner s ' + rs }, [mark(rs === 'ok')]));
+    if (rw) kids.push(h('span', { class: 'corner w ' + rw }, [mark(rw === 'ok')]));
+    if (w && w !== s) kids.push(logo(w, 'alt'));
+    return h('div', null, kids);
+  });
 })();
 </script>
 </body>
