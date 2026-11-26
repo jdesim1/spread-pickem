@@ -27,9 +27,10 @@
   .item { margin:30px 0 0; padding-bottom:10px; border-bottom:2px solid var(--ink); }
   .item h2 { margin:0; font:700 27px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; }
   .item p { margin:4px 0 0; font-size:13px; color:var(--muted); }
-  .side { display:flex; align-items:center; gap:8px; margin:18px 0 8px; font-size:12px; font-weight:700; letter-spacing:.6px; color:var(--muted); }
+  .side { display:flex; align-items:center; gap:8px; margin:22px 0 8px; font-size:13px; color:var(--muted); }
+  .side b { padding:3px 8px; border-radius:3px; font-size:12px; letter-spacing:.6px; color:var(--card); background:var(--muted); }
   .side::after { content:''; flex:1; border-top:1px solid var(--line); }
-  .side.after { color:var(--link); }
+  .side.after b { background:var(--link); }
   .frame { background:var(--bg); }
 
   .kickoff-block { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:var(--block-bg); border-left:3px solid var(--rule); }
@@ -89,7 +90,7 @@
 <body>
 <header class="title-row"><h1 class="title">Spread Pick 'Em</h1><div class="season-label">Beta · polish, before and after</div></header>
 <main id="root">
-  <p class="ask">Four small changes from the family page. Each pair is the same screen twice, in the same colors, so the only difference is the change itself. Tell Claude which to keep.</p>
+  <p class="ask">Four small changes from the family page. Each one is shown as a pair: BEFORE is the family page today, AFTER is the change. Both are in the same colors, so the only difference is the change itself. Tell Claude which to keep.</p>
 </main>
 
 <script>
@@ -187,7 +188,7 @@
   }
   function item(n, title, why) { return h('section', { class: 'item' }, [h('h2', { text: n + ' · ' + title }), h('p', { text: why })]); }
   function side(root, label, cls, kids) {
-    root.appendChild(h('div', { class: 'side' + (cls ? ' ' + cls : ''), text: label }));
+    root.appendChild(h('div', { class: 'side' + (cls ? ' ' + cls : '') }, [h('b', { text: label }), h('span', { text: cls ? 'the change' : 'the family page today' })]));
     root.appendChild(h('div', { class: 'frame' }, kids));
   }
 
@@ -195,28 +196,28 @@
 
   // 1. Say it once
   root.appendChild(item(1, 'Say it once', 'The kickoff time is on the header and again on every game. A finished game shows only "Final".'));
-  side(root, 'NOW', '', [block(G.final, false), game(G.final, { time: true }), block(G.open1, false), game(G.open1, { time: true }),
+  side(root, 'BEFORE', '', [block(G.final, false), game(G.final, { time: true }), block(G.open1, false), game(G.open1, { time: true }),
     h('div', { class: 'meta-line' }, [h('span', { text: 'Every 60s · Nov 25, 9:04 PM ET' }), h('span', { text: 'Refresh' })])]);
-  side(root, 'POLISHED', 'after', [block(G.final, true), game(G.final, { sentence: true }), block(G.open1, true), game(G.open1, {}),
+  side(root, 'AFTER', 'after', [block(G.final, true), game(G.final, { sentence: true }), block(G.open1, true), game(G.open1, {}),
     h('div', { class: 'meta-line' }, [h('span', { text: 'Updates every minute · 9:04 PM ET' }), h('span', { text: 'Refresh' })])]);
 
   // 2. Drawn marks, not emoji
   root.appendChild(item(2, 'Drawn marks, not emoji', 'An emoji padlock looks different on every phone. Right and wrong are shown by color alone.'));
-  side(root, 'NOW', '', [block(G.live, true), game(G.live, { lock: 'emoji' }), block(G.final, true), game(G.final, { sentence: true })]);
-  side(root, 'POLISHED', 'after', [block(G.live, true), game(G.live, { lock: 'drawn' }), block(G.final, true), game(G.final, { sentence: true, marks: true })]);
+  side(root, 'BEFORE', '', [block(G.live, true), game(G.live, { lock: 'emoji' }), block(G.final, true), game(G.final, { sentence: true })]);
+  side(root, 'AFTER', 'after', [block(G.live, true), game(G.live, { lock: 'drawn' }), block(G.final, true), game(G.final, { sentence: true, marks: true })]);
 
   // 3. Over/under in one place
   root.appendChild(item(3, 'Over/under in one place', 'You asked for it on the Monday total-points guess. Under all 16 games it is 16 extra lines.'));
-  side(root, 'NOW', '', [block(G.open1, true), game(G.open1, { total: true }), block(G.open2, true), game(G.open2, { total: true }), tbCard(true)]);
-  side(root, 'POLISHED', 'after', [block(G.open1, true), game(G.open1, {}), block(G.open2, true), game(G.open2, {}), tbCard(true)]);
+  side(root, 'BEFORE', '', [block(G.open1, true), game(G.open1, { total: true }), block(G.open2, true), game(G.open2, { total: true }), tbCard(true)]);
+  side(root, 'AFTER', 'after', [block(G.open1, true), game(G.open1, {}), block(G.open2, true), game(G.open2, {}), tbCard(true)]);
 
   // 4. No tables of dashes
   root.appendChild(item(4, 'No tables of dashes', 'Before the first result the Scoreboard is a table of ones and dashes (the family page tonight).'));
   var players = [['Joe', 15], ['Dylan', 9], ['Alex', 15], ['Sam', 0]];
   var rows = players.map(function (p) { return h('tr', null, [h('td', { text: '1' }), h('td', { text: p[0] }), h('td', { text: '—' }), h('td', { text: '' })]); });
-  side(root, 'NOW', '', [h('div', { class: 'sb-h' }, [h('h3', { text: 'Week 12' }), h('span', { text: '0 of 15 final' })]),
+  side(root, 'BEFORE', '', [h('div', { class: 'sb-h' }, [h('h3', { text: 'Week 12' }), h('span', { text: '0 of 15 final' })]),
     h('table', null, [h('thead', null, [h('tr', null, [h('th', { text: '#' }), h('th', { text: 'Player' }), h('th', { text: 'Record' }), h('th', { text: 'Status' })])]), h('tbody', null, rows)])]);
-  side(root, 'POLISHED', 'after', [h('div', { class: 'sb-h' }, [h('h3', { text: 'Week 12' }), h('span', { text: 'First kickoff Thu 1:00 PM ET' })]),
+  side(root, 'AFTER', 'after', [h('div', { class: 'sb-h' }, [h('h3', { text: 'Week 12' }), h('span', { text: 'First kickoff Thu 1:00 PM ET' })]),
     h('div', { class: 'banner' }, [h('strong', { text: 'No games are final yet' }), h('small', { text: 'Standings appear with the first result.' })]),
     h('div', { class: 'picked-title', text: 'Games picked so far' }),
     h('div', { class: 'picked' }, players.map(function (p) { return h('div', { class: p[1] === 15 ? 'all' : '' }, [p[0], h('span', { text: p[1] + ' of 15' })]); }))]);
