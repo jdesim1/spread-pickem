@@ -2,277 +2,2847 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hlbWT8cVqL/H2HJ23p1GxqY9ZcbRcgW1qPwY3m+g+Mk='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://cdn.jsdelivr.net https://a.espncdn.com; connect-src https://script.google.com https://script.googleusercontent.com 'self'; base-uri 'none'; form-action 'none'">
+<meta name="spread-beta-build" content="5ef3368a6ea8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
-<title>Spread Pick 'Em BETA: Live tab, new approaches</title>
+<title>Spread Pick 'Em BETA</title>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;display=swap">
 <style>
-  /* Design preview only. The chosen "Field and chalk" look; evergreen = spread pick, leather brown = winner pick. */
+  /*
+   * Spread Pick 'Em BETA. Layout, type and components are the pool's "Broadcast light" page (WebApp.html).
+   * Colors are "Field and chalk" (chosen 2026-11-25): grass and white yard lines. A spread pick is filled
+   * evergreen, a winner pick football-leather brown. The pixel reference is spread-beta/dev/final-look.html.
+   */
   :root {
-    --head-bg:#0f3d2e; --head-fg:#ffffff; --head-sub:#b7d3c5; --bg:#f4f6f3; --card:#ffffff; --ink:#16241d; --muted:#56655d;
-    --line:#d9e0da; --block-bg:#e7ede8; --sel-ats:#1a5c40; --sel-ml:#6f4320;
+    --head-bg:#0f3d2e; --head-fg:#ffffff; --head-sub:#b7d3c5; --rule:#ffffff; --block-rule:#0f3d2e;
+    --bg:#f4f6f3; --card:#ffffff; --ink:#16241d; --muted:#56655d; --line:#d9e0da; --block-bg:#e7ede8;
+    --sel-ats:#1a5c40; --sel-ml:#6f4320; --sel-ink:#ffffff; --sel-bd:#1a5c40;
     --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d;
+    --tab-on:#0f3d2e; --btn-bg:#0f3d2e; --btn-fg:#ffffff; --link:#0f5b40; --toast-bg:#16241d; --toast-fg:#ffffff;
+    --me-bg:#e7f0ea; --soon-bg:#e7ede8; --soon-bd:#0f3d2e; --soon-ink:#16241d;
   }
+
   * { box-sizing:border-box; }
   html, body { margin:0; padding:0; }
   body { font:15px/1.4 Arial,Helvetica,sans-serif; color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
-  .title-row { background:var(--head-bg); color:var(--head-fg); padding:16px 14px; }
-  .title { margin:0; padding-left:10px; border-left:4px solid #fff; font:700 25px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; letter-spacing:.2px; text-transform:uppercase; }
+  button, input, select { font-family:inherit; }
+  button { cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline:2px solid var(--sel-bd); outline-offset:2px; }
+  [hidden] { display:none !important; }
+
+  /* ---- header + tabs ---- */
+  .app { max-width:1440px; margin:0 auto; padding-bottom:104px; }
+  .boot-note { margin:0; padding:22px 14px; font-size:14px; color:var(--muted); }
+  .title-row { background:var(--head-bg); color:var(--head-fg); padding:16px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .brand { flex:1; min-width:0; }
+  .title { margin:0; padding-left:10px; border-left:4px solid var(--rule); font:700 25px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; letter-spacing:.2px; text-transform:uppercase; }
   .season-label { color:var(--head-sub); font-size:13px; margin-top:4px; padding-left:14px; }
-  main { max-width:650px; margin:0 auto; padding:0 12px 56px; }
-  .ask { margin:16px 0 0; font-size:14px; color:var(--muted); }
-  .option { margin:30px 0 0; padding-bottom:10px; border-bottom:2px solid var(--ink); }
-  .option h2 { margin:0; font:700 27px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; }
-  .option p { margin:4px 0 0; font-size:13px; color:var(--muted); }
-  .hint { margin:12px 0 8px; font-size:12px; color:var(--muted); }
-  .logo { display:inline-grid; place-items:center; }
-  .logo img { display:block; object-fit:contain; }
-  .mark { display:inline-block; width:11px; height:11px; }
-  .mark.ok { color:var(--ok); } .mark.bad { color:var(--bad); }
-  .live-flag { color:var(--live); font-weight:700; }
+  .account { position:relative; flex-shrink:0; }
+  .account summary { list-style:none; min-height:44px; display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; white-space:nowrap; }
+  .account summary::-webkit-details-marker { display:none; }
+  .account summary .mark { width:12px; height:12px; }
+  .account-initial { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; color:var(--head-bg); background:var(--head-fg); font-size:13px; font-weight:700; }
+  .account-menu { position:absolute; right:0; top:48px; z-index:15; width:240px; max-width:calc(100vw - 28px); padding:14px; color:var(--ink); background:var(--card); border:1px solid var(--line); box-shadow:0 5px 20px rgba(16,34,56,.13); font-size:14px; }
+  .account-menu .link-btn { display:block; margin-top:6px; padding:0; font-size:14px; }
+  .tabs { display:flex; background:var(--card); border-bottom:1px solid var(--line); padding:0 14px; }
+  .tab { flex:1; min-height:48px; background:none; border:0; border-bottom:3px solid transparent; font-size:15px; font-weight:700; color:var(--muted); }
+  .tab[aria-selected=true] { color:var(--ink); border-bottom-color:var(--tab-on); }
+
+  /* ---- Picks: controls ---- */
+  #view-picks { max-width:650px; margin:0 auto; padding:0 12px; }
+  .controls { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:16px 0 4px; }
+  .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .select-wrap { position:relative; display:inline-block; max-width:100%; }
+  .select-wrap .mark { position:absolute; right:12px; top:50%; width:14px; height:14px; margin-top:-7px; color:#808a94; pointer-events:none; }
+  select { min-height:44px; min-width:150px; max-width:100%; font-size:16px; padding:8px 34px 8px 12px; border:1px solid var(--line); border-radius:4px; color:var(--ink); background-color:var(--card); -webkit-appearance:none; appearance:none; }
+  .as { font-size:13px; color:var(--muted); text-align:right; padding-bottom:12px; }
+  .as strong { color:var(--ink); }
+  .week-summary { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 0 0; font-size:14px; color:var(--muted); }
+  .week-summary strong { color:var(--ink); font-size:20px; font-weight:700; }
+  .link-btn { background:none; border:0; color:var(--link); font-size:13px; min-height:44px; padding:0 4px; }
+  .meta-line { padding:0 0 8px; font-size:13px; color:var(--muted); }
+  .soon { margin:4px 0 0; padding:10px 12px; font-size:13px; line-height:1.4; color:var(--soon-ink); background:var(--soon-bg); border:1px solid var(--soon-bd); border-radius:5px; }
+  .soon strong { font-weight:700; }
+
+  /* ---- kickoff blocks + the two-pick game card (layout A: teams as rows) ---- */
+  .kickoff-block { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:22px 0 0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:var(--block-bg); border-left:3px solid var(--block-rule); }
+  .soon[hidden] + .kickoff-block { margin-top:6px; }
+  .live-flag { color:var(--live); letter-spacing:.3px; white-space:nowrap; }
   .live-flag::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin-right:5px; vertical-align:1px; }
-  .key { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px; font-size:12px; color:var(--muted); align-items:center; }
-  .key b { color:var(--ink); }
-  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; border:1.5px solid var(--muted); vertical-align:middle; }
-  .dot.on { background:var(--muted); } .dot.half { background:linear-gradient(90deg, var(--muted) 50%, transparent 50%); }
-
-  /* ---- P: game cards with names (the Picks card, showing who is on each pick) ---- */
-  .standing { display:flex; flex-wrap:wrap; gap:4px 16px; margin:14px 0 0; padding:10px 12px; background:var(--card); border:1px solid var(--line); font-size:14px; }
-  .standing b { font-variant-numeric:tabular-nums; }
-  .standing .me { box-shadow:inset 0 -2px var(--head-bg); }
-  .kickoff-block { margin:18px 0 0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:var(--block-bg); border-left:3px solid var(--head-bg); }
-  .game { padding:12px 0 14px; border-top:1px solid var(--line); }
+  .game { padding:14px 0; border-top:1px solid var(--line); }
   .kickoff-block + .game { border-top:0; }
-  .board { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,98px) minmax(0,98px); gap:6px 8px; align-items:stretch; }
-  .board .state { grid-column:1 / span 2; font-size:12px; color:var(--muted); white-space:nowrap; align-self:center; }
-  .board .col { font-size:12px; font-weight:700; text-align:center; align-self:center; }
-  .board .col.s { color:var(--sel-ats); } .board .col.w { color:var(--sel-ml); }
-  .tm { display:flex; align-items:center; gap:9px; min-width:0; }
-  .tm .logo { width:34px; height:34px; flex:0 0 34px; }
-  .tm .logo img { max-width:30px; max-height:30px; }
-  .who b { display:block; font-size:16px; font-weight:700; }
+  .board { display:grid; grid-template-columns:minmax(0,1fr) auto 78px 78px; gap:8px; align-items:center; }
+  .board .col { font-size:12px; color:var(--muted); text-align:center; }
+  .board .state { grid-column:1 / span 2; min-height:17px; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .board .state .live-flag { font-weight:700; }
+  .tm { display:flex; align-items:center; gap:10px; min-width:0; }
+  .logo { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; }
+  .logo img { max-width:30px; max-height:30px; object-fit:contain; display:block; }
+  .logo .fb { font-size:11px; font-weight:700; color:var(--ink); }
   .who { min-width:0; }
-  .who small { display:block; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .score { align-self:center; min-width:24px; text-align:right; font:700 24px/1 'Barlow Condensed',Arial,sans-serif; font-variant-numeric:tabular-nums; }
+  .who b { display:block; font-size:16px; font-weight:700; }
+  .who .rec { margin-left:6px; font-size:12px; font-weight:400; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .who small { display:block; font-size:13px; color:var(--muted); overflow-wrap:anywhere; }
+  .score { min-width:26px; text-align:right; font:700 24px/1 'Barlow Condensed',Arial,sans-serif; font-variant-numeric:tabular-nums; }
+  .score:empty { min-width:0; }
   .score.lost { color:var(--muted); }
-  .cell { position:relative; min-height:52px; padding:6px 7px; background:var(--card); border:1px solid var(--line); border-radius:5px; }
-  .cell .lab { display:block; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
-  .cell.s .lab { color:var(--sel-ats); } .cell.w .lab { color:var(--sel-ml); }
-  .cell .names { display:block; margin-top:2px; font-size:13px; line-height:1.3; }
-  .cell .names .me { font-weight:700; }
-  .cell .none { color:var(--muted); }
-  .cell.ok { background:var(--ok-soft); border-color:var(--ok); } .cell.bad { background:var(--bad-soft); border-color:var(--bad); }
-  .cell.ok .lab { color:var(--ok); } .cell.bad .lab { color:var(--bad); }
-  .cell .mark { position:absolute; top:6px; right:6px; }
-  .wait { grid-column:3 / span 2; display:flex; flex-direction:column; justify-content:center; padding:6px 8px; min-height:52px; border:1px dashed var(--line); border-radius:5px; font-size:13px; color:var(--muted); }
-  .wait b { color:var(--ink); font-weight:700; }
-  .note { margin:10px 0 0; font-size:13px; }
 
-  /* ---- grids (Q and A) ---- */
+  .pick { position:relative; min-height:52px; padding:0 4px; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:5px; }
+  .pick.s[aria-pressed=true] { color:var(--sel-ink); background:var(--sel-ats); border-color:var(--sel-ats); }
+  .pick.w[aria-pressed=true] { color:var(--sel-ink); background:var(--sel-ml); border-color:var(--sel-ml); }
+  .board .pick.ok { color:var(--ok); background:var(--ok-soft); border-color:var(--ok); box-shadow:inset 0 0 0 1px var(--ok); }
+  .board .pick.bad { color:var(--bad); background:var(--bad-soft); border-color:var(--bad); box-shadow:inset 0 0 0 1px var(--bad); }
+  .mark { display:inline-block; width:13px; height:13px; }
+  .mark svg { display:block; width:100%; height:100%; }
+  .pick .mark { position:absolute; top:4px; right:5px; }
+  .pick.fixed { cursor:default; }                              /* kicked off: shows what was picked, no longer changes */
+  .pick.na { color:var(--muted); border-style:dashed; }         /* not available while the favorite is your spread pick */
+  .pick.noline { grid-row:span 2; align-self:stretch; padding:4px; font-size:13px; font-weight:400; line-height:1.3; color:var(--muted); border-style:dashed; }
+  .note { margin:10px 0 0; font-size:13px; color:var(--muted); }
+  .note.result { color:var(--ink); }
+  .note strong { color:var(--ink); }
+  /* a game that is left out of the spread game: no picks, teams and score in grey, the reason in words */
+  .game.out .board { grid-template-columns:minmax(0,1fr) auto; }
+  .game.out .who b, .game.out .score { color:var(--muted); }
+  .game.out .logo img { opacity:.45; }
+
+  /* ---- total points ---- */
+  .tb-card { margin-top:22px; padding:18px; background:var(--card); border:1px solid var(--line); border-radius:5px; }
+  .tb-title { font-size:13px; color:var(--muted); }
+  .tb-game { font-size:16px; font-weight:700; margin:2px 0 10px; }
+  .tb-card input { width:100%; min-height:52px; font-size:22px; font-weight:700; text-align:center; border:1px solid var(--line); border-radius:4px; padding:8px 12px; background:var(--card); color:var(--ink); -webkit-appearance:none; appearance:none; }
+  .tb-card input[readonly] { background:var(--bg); color:var(--muted); }
+  .tb-ref { display:flex; justify-content:space-between; gap:10px; margin-top:10px; font-size:13px; color:var(--muted); }
+  .tb-ref strong { color:var(--ink); font-variant-numeric:tabular-nums; }
+  .tb-actual { margin-top:8px; font-size:13px; font-weight:700; }
+
+  /* ---- notices, skeletons ---- */
+  .card { background:var(--card); border:1px solid var(--line); border-radius:5px; padding:12px; }
+  .notice { text-align:center; padding:22px 16px; margin-top:16px; }
+  .notice-title { font-size:16px; font-weight:700; margin-bottom:4px; }
+  .notice-body { font-size:14px; color:var(--muted); }
+  .notice .btn-secondary { margin-top:12px; }
+  .skeleton { background:var(--block-bg); border-radius:4px; }
+  .sk-line { height:14px; width:55%; margin:16px 0 10px; }
+  .sk-block { height:96px; }
+  .sk-row { height:34px; margin-bottom:6px; }
+
+  /* ---- buttons, save bar, toast ---- */
+  .btn-primary { min-height:48px; padding:0 16px; background:var(--btn-bg); color:var(--btn-fg); border:0; border-radius:4px; font-size:15px; font-weight:700; }
+  .btn-primary[aria-disabled=true] { opacity:.45; cursor:default; }      /* truly unavailable; a tap still says why */
+  .btn-secondary { min-height:44px; padding:0 16px; background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:4px; font-size:15px; font-weight:700; }
+  .savebar { position:fixed; left:0; right:0; bottom:0; z-index:20; background:var(--card); border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); }
+  .savebar-inner { max-width:626px; margin:0 auto; display:flex; align-items:center; gap:12px; }
+  .savebar .meta { flex:1; min-width:0; font-size:13px; color:var(--muted); }
+  .savebar .count { display:block; font-weight:700; color:var(--ink); }
+  .savebar .unsaved { display:block; font-weight:700; color:var(--ink); }
+  .savebar .unsaved::before { content:''; display:inline-block; width:7px; height:7px; border-radius:50%; background:currentColor; margin-right:6px; vertical-align:1px; }
+  .savebar .btn-primary { max-width:60%; }
+  .toast { position:fixed; left:12px; right:12px; bottom:86px; z-index:50; max-width:626px; margin:0 auto; background:var(--toast-bg); color:var(--toast-fg); padding:12px 14px; border-radius:5px; font-size:14px; opacity:0; transform:translateY(8px); transition:opacity .18s ease, transform .18s ease; pointer-events:none; }
+  .toast.show { opacity:1; transform:none; }
+
+  /* ---- dialogs ---- */
+  .modal-backdrop { position:fixed; top:0; right:0; bottom:0; left:0; z-index:40; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(22,36,29,.45); overflow-y:auto; }
+  .modal { width:100%; max-width:360px; margin:auto; padding:20px; background:var(--card); border-radius:5px; box-shadow:0 12px 40px rgba(0,0,0,.25); }
+  .modal-title { margin:0 0 6px; font-size:17px; font-weight:700; }
+  .modal-body { margin:0 0 16px; font-size:14px; color:var(--muted); }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+  .modal-actions button { flex:1; min-height:44px; padding:0 10px; }
+  .modal .link-btn { display:block; width:100%; margin-top:8px; text-align:center; }
+
+  /* ---- sign-in (first version, not yet agreed) ---- */
+  .signin { max-width:420px; margin:0 auto; padding:22px 12px 40px; }
+  .signin h2 { margin:0 0 4px; font:700 25px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; }
+  .lead { margin:0 0 18px; font-size:14px; color:var(--muted); }
+  .form-row { margin:0 0 14px; }
+  .form-row label, .form-row .field-label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .form-row .hint { margin:4px 0 0; font-size:12px; color:var(--muted); }
+  .form-row .select-wrap, .form-row select, .form-row input { display:block; width:100%; }
+  .form-row .who-fixed { font-size:16px; font-weight:700; }
+  input.text { min-height:48px; font-size:16px; padding:8px 12px; border:1px solid var(--line); border-radius:4px; background:var(--card); color:var(--ink); -webkit-appearance:none; appearance:none; }
+  input.pin { font-size:20px; font-weight:700; letter-spacing:.25em; text-align:center; }
+  .form-error { min-height:18px; margin:0 0 12px; font-size:13px; font-weight:700; color:var(--bad); }
+  .signin-form .btn-primary { width:100%; }
+
+  /* ---- Live + Scoreboard ---- */
+  .boardview { padding:16px 12px 24px; display:flex; flex-direction:column; gap:20px; }
+  .boardview h2 { margin:0; font:700 22px/1.1 'Barlow Condensed',Arial,sans-serif; color:var(--ink); }
+  .board-meta { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px 16px; font-size:13px; color:var(--muted); }
+  .refresh-meta { display:flex; align-items:center; justify-content:flex-end; gap:10px; color:var(--muted); font-size:12px; }
+  .status-line { font-size:13px; color:var(--muted); }
+  .board-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 12px; }
+  .board-heading .status-line { white-space:nowrap; font-size:12px; }
+  .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; background:var(--card); }
+  table { border-collapse:separate; border-spacing:0; width:100%; font-size:14px; white-space:nowrap; }
+  th, td { padding:9px 10px; text-align:left; border-bottom:1px solid var(--line); background:var(--card); }
+  tr:last-child td { border-bottom:0; }
+  th { font-size:12px; font-weight:400; color:var(--muted); }
+  th.num, td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .boardview table:not(.grid) td { font-size:15px; padding:11px 9px; }
+  .boardview table.ranked td:first-child { color:var(--muted); }       /* the # column */
+  tr.me td { background:var(--me-bg); }
+  th.sticky, td.sticky { position:sticky; z-index:1; }
+  .sticky-1 { left:0; }
+  .sticky-2 { left:44px; min-width:96px; }
+  td.st-out { color:var(--muted); }
+  td.st-leader, td.st-winner { font-weight:700; }
+  .section-head { margin:0 0 8px; }
+  .section-head .status-line { margin-top:4px; }
+
+  .live-toolbar { display:block; }
+  .live-controls { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .live-controls select { width:154px; min-width:0; }
+  .live-switch { display:flex; gap:2px; padding:3px; background:var(--card); border:1px solid var(--line); border-radius:5px; }
+  .live-switch button { min-width:64px; min-height:44px; padding:7px 10px; border:0; border-radius:3px; background:none; color:var(--muted); font-size:14px; font-weight:700; }
+  .live-switch button[aria-pressed=true] { background:var(--ink); color:#fff; }
+  .mobile-hint { margin:0 0 10px; font-size:12px; color:var(--muted); }
+
+  /* The Live grid, "one call per square" (chosen 2026-11-25): rows are players, columns are games, and a square
+     is ONE call. One logo = that team all the way. Two smaller logos with a hairline between = the left one
+     covers, the right one wins. Before kickoff only a dot; once the game is graded, the points earned. The pixel
+     reference is spread-beta/dev/live-options3.html ("New 2"). */
   .grid-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; background:var(--card); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-  table { border-collapse:separate; border-spacing:0; table-layout:fixed; font-size:13px; }
-  th, td { border-bottom:1px solid var(--line); background:var(--card); padding:0; text-align:center; }
-  th.pl, td.pl { position:sticky; left:0; z-index:2; width:84px; min-width:84px; padding:6px 8px; text-align:left; border-right:1px solid var(--line); }
-  th.pl { font-size:12px; font-weight:400; color:var(--muted); vertical-align:bottom; }
-  td.pl .nm { display:block; font-size:14px; font-weight:700; }
-  td.pl .rc { display:block; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
-  td.pl.me { background:#e7f0ea; box-shadow:inset 3px 0 var(--head-bg); }
-  th.gm { width:66px; min-width:66px; padding:8px 5px 6px; vertical-align:top; border-right:1px solid var(--line); font-weight:400; }
-  th.gm.live { box-shadow:inset 0 2px var(--live); }
-  .ml { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--muted); }
-  .ml strong { font-size:14px; color:var(--ink); } .ml.won { color:var(--ink); font-weight:700; }
-  .st { display:block; margin-top:5px; text-align:left; font-size:11px; line-height:1.35; color:var(--muted); }
-  .st b { display:block; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
-  .st .live-flag::before { display:none; }
-  td.c { width:66px; min-width:66px; border-right:1px solid var(--line); }
-  .none { color:var(--muted); }
-
-  /* Q: one call per square */
-  table.q td.c { height:64px; }
-  table.q td.c > div { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; height:100%; }
-  table.q td.c.p2 { background:var(--ok-soft); } table.q td.c.p0 { background:var(--bad-soft); }
-  table.q .one img { max-width:32px; max-height:30px; }
-  table.q .two { display:flex; align-items:center; gap:2px; }
-  table.q .two img { max-width:22px; max-height:22px; }
-  table.q .two i { width:1px; height:22px; background:var(--line); }
+  table.grid { --pl:84px; --gm:66px; width:calc(var(--pl) + var(--gm) * var(--game-count)); min-width:100%; table-layout:fixed; font-size:13px; }
+  table.grid th, table.grid td { padding:0; text-align:center; }
+  table.grid th.pl, table.grid td.pl { position:sticky; left:0; z-index:2; width:var(--pl); min-width:var(--pl); padding:6px 8px; text-align:left; border-right:1px solid var(--line); }
+  table.grid th.pl { font-size:12px; font-weight:400; color:var(--muted); vertical-align:bottom; }
+  table.grid td.pl .nm { display:block; font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  table.grid td.pl .rc { display:block; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  table.grid td.pl .pc { display:block; font-size:11px; color:var(--muted); white-space:nowrap; }
+  table.grid td.pl.me { background:var(--me-bg); box-shadow:inset 3px 0 var(--head-bg); }
+  table.grid th.gm { position:relative; width:var(--gm); min-width:var(--gm); padding:8px 5px 6px; vertical-align:top; border-right:1px solid var(--line); font-weight:400; }
+  table.grid th.gm.live { box-shadow:inset 0 2px var(--live); }
+  table.grid th.gm.out .match-line strong, table.grid th.gm.out .st b { color:var(--muted); }    /* a game left out of the spread game */
+  .match-line { display:flex; justify-content:space-between; align-items:center; gap:3px; font-size:12px; color:var(--muted); }
+  .match-line strong { font-size:14px; color:var(--ink); }
+  .match-line.won { color:var(--ink); font-weight:700; }
+  table.grid th.gm .st { display:block; margin-top:5px; text-align:left; font-size:11px; line-height:1.35; color:var(--muted); white-space:normal; }
+  table.grid th.gm .st b { display:block; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+  table.grid th.gm .st .live-flag { font-weight:700; letter-spacing:0; }
+  table.grid th.gm .st .live-flag::before { display:none; }
+  table.grid td.c { width:var(--gm); min-width:var(--gm); height:64px; border-right:1px solid var(--line); }
+  table.grid td.c.p2 { background:var(--ok-soft); }       /* +2: both picks right */
+  table.grid td.c.p0 { background:var(--bad-soft); }      /* +0: neither */
+  table.grid tbody tr:last-child td { border-bottom:0; }
+  .square { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; width:100%; height:100%; min-height:64px; padding:0; border:0; border-radius:0; background:transparent; color:inherit; font:inherit; }
+  .square .logo { width:auto; height:auto; flex:none; }
+  .square .one img { max-width:32px; max-height:30px; }
+  .square .two { display:flex; align-items:center; gap:2px; }
+  .square .two img { max-width:22px; max-height:22px; }
+  .square .two i { width:1px; height:22px; background:var(--line); }
+  .square .none { color:var(--muted); }
+  .square .two .none { min-width:22px; text-align:center; }
   .pts { font:700 15px/1 'Barlow Condensed',Arial,sans-serif; font-variant-numeric:tabular-nums; }
-  .p2 .pts { color:var(--ok); } .p1 .pts { color:var(--ink); } .p0 .pts { color:var(--bad); }
+  .p2 .pts { color:var(--ok); }
+  .p1 .pts { color:var(--ink); }
+  .p0 .pts { color:var(--bad); }
+  .square:focus-visible, .grid-game-tab:focus-visible { outline-offset:-2px; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; border:1.5px solid var(--muted); vertical-align:middle; }
+  .dot.on { background:var(--muted); }      /* there is no half dot: it would give away that a player took the underdog (design 5.5) */
+  .grid-game-tab { position:absolute; top:0; right:0; bottom:0; left:0; width:100%; height:100%; padding:0; border:0; border-radius:0; background:transparent; }
+  .grid-key { display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; margin-top:10px; font-size:12px; color:var(--muted); }
+  .grid-key b { color:var(--ink); }
+  .left-out-list { margin:12px 0 0; font-size:13px; color:var(--muted); }
 
-  /* A: two thin rows per player */
-  th.kind, td.kind { position:sticky; left:84px; z-index:2; width:22px; min-width:22px; font-size:11px; font-weight:700; border-right:1px solid var(--line); }
-  td.kind.s { color:var(--sel-ats); } td.kind.w { color:var(--sel-ml); }
-  table.a td.c { height:30px; }
-  table.a td.c.ok { background:var(--ok-soft); } table.a td.c.bad { background:var(--bad-soft); }
-  table.a td.c .logo { vertical-align:middle; } table.a td.c .logo img { max-width:22px; max-height:22px; }
-  table.a td.c .mark { margin-left:3px; vertical-align:middle; }
-  table.a tr.w td { border-bottom-width:2px; }
-  table.a tr.s td.c, table.a tr.s td.kind { border-bottom-color:#eef1ee; }
+  /* Games view: one matchup at a time, the players' NAMES grouped by call (first version, not yet agreed) */
+  .game-rail { display:flex; overflow-x:auto; -webkit-overflow-scrolling:touch; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:24px; }
+  .game-option { flex:0 0 116px; padding:11px 12px; background:var(--card); border:0; border-right:1px solid var(--line); border-bottom:3px solid transparent; color:var(--ink); text-align:left; }
+  .game-option[aria-pressed=true] { background:var(--me-bg); border-bottom-color:var(--tab-on); }
+  .game-option .match-line { color:var(--ink); font-weight:700; line-height:1.6; }
+  .game-option .match-line strong { font-size:16px; }
+  .game-option .st { display:block; margin-top:5px; font-size:12px; color:var(--muted); }
+  .game-option .st .live-flag::before { display:none; }
+  .focused-game { width:100%; max-width:700px; margin:0 auto; }
+  .focused-status { display:flex; justify-content:center; flex-wrap:wrap; gap:4px 8px; font-size:14px; color:var(--muted); margin-bottom:18px; }
+  .focused-status .live-flag { font-size:12px; font-weight:700; }
+  .focus-score { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding-bottom:18px; }
+  .focus-team { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; }
+  .focus-team .logo { grid-column:1 / -1; }
+  .focus-team strong { display:block; font-size:16px; overflow-wrap:anywhere; }
+  .focus-team small { display:block; color:var(--muted); font-size:12px; margin-top:3px; }
+  .focus-team .big { font:700 38px/1 'Barlow Condensed',Arial,sans-serif; font-variant-numeric:tabular-nums; }
+  .focused-game .note.result { margin:0 0 4px; text-align:center; }
+  .call { margin-top:18px; }
+  .call-heading { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding-bottom:8px; border-bottom:2px solid var(--ink); }
+  .call-heading h3 { margin:0; font:700 20px/1.2 'Barlow Condensed',Arial,sans-serif; font-variant-numeric:tabular-nums; }
+  .call-heading .pts { font-size:20px; }
+  .person-pick { display:block; width:100%; min-height:48px; padding:12px 10px; border:0; border-bottom:1px solid var(--line); color:var(--ink); background:var(--card); text-align:left; font-size:15px; }
+  .person-pick.me { box-shadow:inset 3px 0 var(--head-bg); font-weight:700; }
+  .call .no-picks { padding:12px 10px; }
+  .call.p2 .person-pick, .call.p2 .no-picks { background:var(--ok-soft); }     /* this call earned +2 */
+  .call.p0 .person-pick, .call.p0 .no-picks { background:var(--bad-soft); }    /* this call earned +0 */
+  .who-lines { margin-top:18px; }
+  .who-line { padding:4px 0; font-size:14px; line-height:1.5; }
+  .no-picks, .focus-footnote { font-size:13px; color:var(--muted); line-height:1.5; padding:12px 0; }
+  .focus-footnote { border-top:1px solid var(--line); margin-top:18px; }
+  .pick-detail { margin-bottom:16px; padding:14px; border:1px solid var(--line); border-left:3px solid var(--head-bg); background:var(--card); scroll-margin-top:16px; }
+  .detail-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .detail-top h3 { margin:0; font:700 22px/1.2 'Barlow Condensed',Arial,sans-serif; }
+  .detail-team { display:flex; align-items:center; gap:10px; margin:8px 0; font-size:15px; }
+  .detail-team small { display:block; color:var(--muted); font-size:13px; }
+  .detail-team .big { margin-left:auto; font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .detail-pick { display:flex; align-items:center; gap:10px; margin-top:8px; padding:10px 8px; border-left:3px solid var(--line); font-size:15px; }
+  .detail-pick .k { flex:0 0 56px; font-size:12px; color:var(--muted); }
+  .detail-pick .r { margin-left:auto; display:inline-flex; align-items:center; gap:5px; font-size:13px; color:var(--muted); text-align:right; }
+  .detail-pick.ok { background:var(--ok-soft); border-left-color:var(--ok); }
+  .detail-pick.bad { background:var(--bad-soft); border-left-color:var(--bad); }
+  .detail-pick.ok .r { color:var(--ok); }
+  .detail-pick.bad .r { color:var(--bad); }
+  .detail-points { display:flex; align-items:baseline; gap:10px; margin-top:12px; font-size:15px; }
+  .detail-points .pts { font-size:20px; }
+  .detail-state { color:var(--muted); font-size:13px; margin-top:10px; }
+  .tiebreaker-board { width:100%; max-width:480px; }
+
+  /* Scoreboard */
+  .sb-h { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .sb-h span { font-size:13px; color:var(--muted); }
+  .banner { margin-top:8px; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .banner strong { display:block; font-size:15px; }
+  .banner small { display:block; margin-top:3px; font-size:13px; color:var(--muted); }
+  .picked-title { margin:16px 0 0; font-size:13px; color:var(--muted); }
+  .picked { display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; margin-top:14px; }
+  .picked div { display:flex; justify-content:space-between; gap:8px; font-size:15px; }
+  .picked span { color:var(--muted); font-variant-numeric:tabular-nums; }
+  .picked .all span { color:var(--ok); }
+  .picked .me { font-weight:700; }
+  .standings-grid { display:grid; grid-template-columns:1fr; gap:28px; }
+  .standings-heading { padding-bottom:11px; border-bottom:2px solid var(--ink); }
+  .week-winners { border-top:1px solid var(--line); padding-top:16px; }
+  .week-winners h2 { font:700 15px/1.4 Arial,Helvetica,sans-serif; }
+  .winner-list { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px; }
+  .winner-item { font-size:15px; }
+  .winner-item small { display:block; color:var(--muted); font-size:12px; margin-bottom:3px; }
+  .winner-item strong { margin-right:8px; }
+  .winner-item .record { font-size:13px; color:var(--muted); }
+
+  @media (min-width:651px) {
+    .title-row { padding:18px 22px; gap:16px; }
+    .title { font-size:29px; }
+    .tabs { gap:28px; padding:0 22px; }
+    .tab { flex:0 0 auto; padding:13px 2px 11px; }
+    .boardview { padding:22px; gap:22px; }
+    .boardview h2 { font-size:25px; }
+    .live-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .live-controls { justify-content:flex-start; gap:16px; }
+    .live-controls select { width:158px; }
+    .live-switch button { min-width:70px; padding:7px 12px; }
+    .refresh-meta { font-size:13px; }
+    .board-heading { margin-bottom:16px; }
+    .board-heading .status-line { font-size:13px; }
+    .mobile-hint { display:none; }
+    table.grid { --pl:104px; --gm:72px; }
+    .focus-score { gap:28px; padding-bottom:22px; }
+    .focus-team { grid-template-columns:40px minmax(0,1fr) auto; gap:12px; }
+    .focus-team .logo { grid-column:auto; }
+    .focus-team strong { font-size:18px; }
+    .focus-team .big { font-size:42px; }
+    .standings-grid { grid-template-columns:1fr 1fr; gap:30px; }
+    .winner-list { display:flex; flex-wrap:wrap; gap:18px 30px; }
+    .savebar .btn-primary { max-width:none; }
+  }
+  @media (max-width:360px) {
+    .title { font-size:23px; }
+    .account-initial { display:none; }
+    .board { grid-template-columns:minmax(0,1fr) auto 68px 68px; }
+    .tm { gap:6px; }
+    .logo { width:32px; height:32px; flex-basis:32px; }
+    .logo img { max-width:28px; max-height:28px; }
+    .who .nick { display:none; }
+    .live-controls .select-wrap { flex:1; min-width:0; }
+    .live-controls select { width:100%; padding-right:28px; }
+    .live-switch button { min-width:57px; padding:7px 8px; }
+    .focus-team { grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
-<header class="title-row"><h1 class="title">Spread Pick 'Em</h1><div class="season-label">Beta · Live tab, new approaches</div></header>
-<main>
-  <p class="ask">Two new ways to show everyone's picks, and Option A from before for comparison. Same three players and five games in each: two finished, one live, two not kicked off. Tell Claude which one.</p>
-
-  <div class="option"><h2>New 1 · Game cards with names</h2><p>No grid. The Live tab uses the same card as the Picks tab, and each box lists who made that pick. A box turns green or red when the game is graded.</p></div>
-  <div id="p"></div>
-
-  <div class="option"><h2>New 2 · One call per square</h2><p>A grid, but each square is a single call. One logo means that team all the way: the favorite to cover, or the underdog to win. Two logos mean the underdog covers but the favorite wins. After the game the square shows the points earned.</p></div>
-  <div class="hint">Swipe for more games →</div>
-  <div class="grid-wrap" id="q"></div>
-  <div class="key"><span><b>One logo</b> that team all the way</span><span><b>Two logos</b> left covers, right wins</span><span><b>+2</b> both right</span><span><b>+1</b> one right</span><span><b>+0</b> neither</span><span><span class="dot on"></span> both picks in, hidden</span><span><span class="dot half"></span> one in</span><span><span class="dot"></span> none yet</span></div>
-
-  <div class="option"><h2>Option A · Two rows per player</h2><p>From the earlier round, unchanged: an S row for spread picks and a W row for winner picks.</p></div>
-  <div class="hint">Swipe for more games →</div>
-  <div class="grid-wrap" id="a"></div>
-</main>
-
+<div class="app" id="app"><p class="boot-note">Loading…</p></div>
+<noscript><p class="boot-note">Spread Pick 'Em needs JavaScript turned on.</p></noscript>
 <script>
 (function () {
   'use strict';
-  var LOGO = 'https://cdn.jsdelivr.net/gh/frertommy/team-logos@main/NFL/';
-  var TEAMS = {
-    GB: ['NFC', 'Green Bay Packers'], LAR: ['NFC', 'Los Angeles Rams'], CHI: ['NFC', 'Chicago Bears'], DET: ['NFC', 'Detroit Lions'],
-    PHI: ['NFC', 'Philadelphia Eagles'], DAL: ['NFC', 'Dallas Cowboys'], KC: ['AFC', 'Kansas City Chiefs'], BUF: ['AFC', 'Buffalo Bills'],
-    DEN: ['AFC', 'Denver Broncos'], PIT: ['AFC', 'Pittsburgh Steelers']
-  };
-  // Lines are the real Week 12 numbers saved Wed 11/25 (home team's number). Scores, the clock and every pick are made up.
-  var GAMES = [
-    { id: 'g1', block: 'Wednesday, Nov 25 · 8:00 PM ET', away: 'GB', home: 'LAR', homeSpread: -2.5, state: 'final', score: [20, 27], cover: 'LAR', winner: 'LAR' },
-    { id: 'g2', block: 'Thursday, Nov 26 · 1:00 PM ET', away: 'CHI', home: 'DET', homeSpread: 1.5, state: 'final', score: [24, 23], cover: 'DET', winner: 'CHI' },
-    { id: 'g3', block: 'Thursday, Nov 26 · 4:30 PM ET', away: 'PHI', home: 'DAL', homeSpread: -8.5, state: 'live', score: [10, 14], clock: '6:12 · 2nd' },
-    { id: 'g4', block: 'Thursday, Nov 26 · 8:20 PM ET', away: 'KC', home: 'BUF', homeSpread: -3, state: 'open', when: 'Thu 8:20p', tv: 'NBC' },
-    { id: 'g5', block: 'Friday, Nov 27 · 3:00 PM ET', away: 'DEN', home: 'PIT', homeSpread: 3.5, state: 'open', when: 'Fri 3p', tv: 'Prime Video' }
-  ];
-  var PLAYERS = [
-    { name: 'Joe', me: true, record: '3-1', points: 3, picks: { g1: ['LAR', 'LAR'], g2: ['CHI', 'CHI'], g3: ['DAL', 'DAL'], g4: [true, true], g5: [true, true] } },
-    { name: 'Dylan', record: '2-2', points: 2, picks: { g1: ['GB', 'LAR'], g2: ['DET', 'DET'], g3: ['PHI', 'DAL'], g4: [true, false], g5: [false, false] } },
-    { name: 'MK', record: '2-2', points: 2, picks: { g1: ['GB', 'GB'], g2: ['DET', 'CHI'], g3: ['PHI', 'PHI'], g4: [false, false], g5: [true, true] } }
-  ];
 
-  function h(tag, attrs, kids) {
+  // ---------------------------------------------------------------
+  // Constants
+  // ---------------------------------------------------------------
+  var PROD_ORIGIN = 'https://jdesim1.github.io';
+  // SHA-256 of the pool's deployment id. The id itself is never in this file (design 10.2): it arrives in the
+  // invitation link (#k=...) and is used only when it hashes to this value.
+  var KEY_SHA256 = 'a844a596360e8a820d8ff36512a85830636843931e63265969da15255db07bb5';
+  var EXEC_BASE = 'https://script.google.com/macros/s/';
+  // One origin is shared by every page published under that account, so every key carries the prefix (10.3).
+  var STORE = { k: 'spreadbeta.k', token: 'spreadbeta.token', player: 'spreadbeta.player', liveView: 'spreadbeta.liveView', cache: 'spreadbeta.cache' };
+  var LOGO_SVG = 'https://cdn.jsdelivr.net/gh/frertommy/team-logos@main/NFL/';
+  var LOGO_PNG = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/';
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var TZ = 'America/New_York';
+  var AUTO_REFRESH_MS = 60000;       // how often the page quietly reloads what is on screen
+  var SOON_MS = 3 * 3600 * 1000;     // warn about games that still need a pick and kick off within this long
+
+  var state = {
+    boot: null,                  // the last bootstrap answer (without its week)
+    me: '',                      // who this phone is signed in as; a tester is always themselves
+    stale: false,                // true while the screen shows this phone's saved copy and the fresh answer is still out
+    staleFailed: false,
+    bootToken: 0,
+    weekKey: '',
+    weekChosen: false,           // the player picked a week from the menu (the page then stops following "the current week")
+    week: null,                  // the server's week, exactly as last received (never holds an unsaved choice)
+    weekFailed: false,           // the chosen week could not be loaded ("Couldn’t load this week" is on screen)
+    picks: {},                   // what is on screen: { eventId: { ats, ml, shown } }
+    loaded: { picks: {}, tbGuess: null },   // what the server holds; a save sends only what differs from it
+    tbGuess: '',
+    saving: false,
+    saveSeq: 0,                  // how many saves have left this phone: a refresh that left before the latest one is out of date
+    reqToken: 0,
+    weekAt: 0,
+    weekJson: '',
+    weekRefreshing: false,
+    view: 'picks',
+    live: null,
+    liveView: 'grid',
+    liveGameId: '',
+    liveDetail: null,
+    liveGridScroll: 0,
+    weekChanging: false,
+    liveAt: 0,
+    liveJson: '',
+    liveLoading: false,
+    liveRefreshing: false,
+    liveToken: 0,
+    scoreboard: null,
+    scoreboardLoading: false,
+    sbToken: 0,
+    scoreboardAt: 0,
+    scoreboardJson: '',
+    sbRefreshing: false,
+    reauthMuted: false           // "Not now" was tapped on the sign-in dialog: the quiet refresh stops asking
+  };
+
+  var transport = { url: '' };
+  var els = {};
+  var cardMap = {};
+  var tbRefs = null;
+  var soonEl = null;
+  var signInWait = null;         // the one sign-in that every refused call waits for
+  var autoTimer = null;
+  var toastTimer = null;
+
+  // ---------------------------------------------------------------
+  // Small helpers. Server text only ever reaches the page as text (h() sets textContent, never markup).
+  // ---------------------------------------------------------------
+  function $(id) { return document.getElementById(id); }
+
+  function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+
+  function h(tag, attrs, children) {
     var el = document.createElement(tag);
-    Object.keys(attrs || {}).forEach(function (k) {
-      var v = attrs[k];
-      if (v === null || v === undefined || v === false) return;
-      if (k === 'text') el.textContent = v; else if (k === 'class') el.className = v; else el.setAttribute(k, v);
-    });
-    (kids || []).forEach(function (c) { if (c) el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        var v = attrs[k];
+        if (v === null || v === undefined || v === false) return;
+        if (k === 'class') el.className = v;
+        else if (k === 'text') el.textContent = v;
+        else if (k === 'hidden') el.hidden = !!v;
+        else if (k.indexOf('on') === 0) el.addEventListener(k.slice(2), v);
+        else el.setAttribute(k, v === true ? '' : String(v));
+      });
+    }
+    if (children !== null && children !== undefined) {
+      (Array.isArray(children) ? children : [children]).forEach(function (c) {
+        if (c === null || c === undefined || c === false) return;
+        el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+      });
+    }
     return el;
   }
-  function nick(a) { return TEAMS[a][1].split(' ').slice(-1)[0]; }
-  function sp(n) { return n === 0 ? 'PK' : (n > 0 ? '+' : '−') + Math.abs(n); }
-  function spreadOf(g, a) { return a === g.home ? g.homeSpread : -g.homeSpread; }
-  function fav(g) { return g.homeSpread < 0 ? g.home : g.away; }
-  function lineText(g) { return fav(g) + ' ' + sp(spreadOf(g, fav(g))); }
-  function logo(abbr, cls) {
-    var t = TEAMS[abbr], img = h('img', { alt: abbr }), slot = h('span', { class: 'logo' + (cls ? ' ' + cls : '') }, [img]);
-    img.addEventListener('error', function () { slot.textContent = abbr; });
-    img.src = LOGO + t[0] + '/' + encodeURIComponent(t[1]) + '/' + t[1].toLowerCase().replace(/ /g, '-') + '.svg';
+
+  // Drawn marks, no emoji: a padlock, a tick, a cross, and the small arrow on menus.
+  function mark(kind) {
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    function part(tag, attrs) {
+      var el = document.createElementNS(SVG_NS, tag);
+      Object.keys(attrs).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+      svg.appendChild(el);
+    }
+    svg.setAttribute('viewBox', kind === 'chev' ? '0 0 24 24' : '0 0 13 13');
+    svg.setAttribute('focusable', 'false');
+    if (kind === 'lock') {
+      part('rect', { x: '2.5', y: '6', width: '8', height: '6', rx: '1.2', fill: 'currentColor' });
+      part('path', { d: 'M4.3 6V4.4a2.2 2.2 0 0 1 4.4 0V6', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.4' });
+    } else if (kind === 'ok') {
+      part('path', { d: 'M2.5 7l2.8 2.8L10.5 4', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+    } else if (kind === 'bad') {
+      part('path', { d: 'M3 3.5l7 7M10 3.5l-7 7', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round' });
+    } else {
+      part('polyline', { points: '6 9 12 15 18 9', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+    }
+    var span = h('span', { class: 'mark mark-' + kind, 'aria-hidden': 'true' });
+    span.appendChild(svg);
+    return span;
+  }
+
+  // Storage, with a copy in memory so the page still works for this visit when the phone refuses storage
+  // (private browsing): the sign-in then lasts until the page is closed.
+  var memStore = {};
+  function readStore(key) {
+    try { var v = window.localStorage.getItem(key); if (v !== null && v !== undefined) return String(v); } catch (e) { /* storage unavailable */ }
+    return Object.prototype.hasOwnProperty.call(memStore, key) ? memStore[key] : '';
+  }
+  function writeStore(key, value) {
+    memStore[key] = String(value);
+    try { window.localStorage.setItem(key, value); } catch (e) { /* storage unavailable */ }
+  }
+  function dropStore(key) {
+    delete memStore[key];
+    try { window.localStorage.removeItem(key); } catch (e) { /* storage unavailable */ }
+  }
+
+  function possessive(name) { return name + "'s"; }
+  function focusEl(el) { try { if (el) el.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+  function numOrNull(v) {
+    if (v === null || v === undefined || v === '') return null;
+    var n = Number(v);
+    return isFinite(n) ? n : null;
+  }
+  function cleanMessage(e) {
+    var msg = (e && typeof e === 'object' && 'message' in e) ? String(e.message) : (typeof e === 'string' ? e : '');
+    msg = msg.replace(/^(ScriptError|Exception|Error):\s*/i, '').trim();
+    // A server message that says to run something in the script editor is for the pool's owner, never for a tester.
+    if (/script editor|Setup \/ Rebuild/.test(msg)) return 'Spread Pick ’Em needs a repair only Joe can do. Tell Joe.';
+    return msg || 'Something went wrong.';
+  }
+
+  var teamInfo = {
+    ARI:['NFC','Arizona Cardinals'],ATL:['NFC','Atlanta Falcons'],BAL:['AFC','Baltimore Ravens'],BUF:['AFC','Buffalo Bills'],CAR:['NFC','Carolina Panthers'],CHI:['NFC','Chicago Bears'],CIN:['AFC','Cincinnati Bengals'],CLE:['AFC','Cleveland Browns'],DAL:['NFC','Dallas Cowboys'],DEN:['AFC','Denver Broncos'],DET:['NFC','Detroit Lions'],GB:['NFC','Green Bay Packers'],HOU:['AFC','Houston Texans'],IND:['AFC','Indianapolis Colts'],JAX:['AFC','Jacksonville Jaguars'],KC:['AFC','Kansas City Chiefs'],LV:['AFC','Las Vegas Raiders'],LAC:['AFC','Los Angeles Chargers'],LAR:['NFC','Los Angeles Rams'],MIA:['AFC','Miami Dolphins'],MIN:['NFC','Minnesota Vikings'],NE:['AFC','New England Patriots'],NO:['NFC','New Orleans Saints'],NYG:['NFC','New York Giants'],NYJ:['AFC','New York Jets'],PHI:['NFC','Philadelphia Eagles'],PIT:['AFC','Pittsburgh Steelers'],SF:['NFC','San Francisco 49ers'],SEA:['NFC','Seattle Seahawks'],TB:['NFC','Tampa Bay Buccaneers'],TEN:['AFC','Tennessee Titans'],WSH:['NFC','Washington Commanders']
+  };
+  function teamMeta(abbr) { return Object.prototype.hasOwnProperty.call(teamInfo, abbr) ? teamInfo[abbr] : null; }
+  function teamName(abbr) { var meta = teamMeta(abbr); return meta ? meta[1] : String(abbr); }
+  function teamNickname(abbr) { return teamName(abbr).split(' ').slice(-1)[0]; }
+  // A team's logo: the drawn one for the 32 teams, ESPN's picture for any other short code, and the team's
+  // letters when neither loads. Only a plain short code is ever put into an address.
+  function teamLogo(abbr) {
+    var meta = teamMeta(abbr), code = String(abbr);
+    var slot = h('span', { class: 'logo' });
+    if (!meta && !/^[A-Za-z0-9]{2,5}$/.test(code)) {
+      slot.appendChild(h('span', { class: 'fb', text: code }));
+      return slot;
+    }
+    var png = LOGO_PNG + code.toLowerCase() + '.png';
+    var img = h('img', { alt: '', decoding: 'async' });
+    var triedPng = !meta;
+    img.addEventListener('error', function () {
+      if (!triedPng) { triedPng = true; img.src = png; return; }
+      clear(slot);
+      slot.appendChild(h('span', { class: 'fb', text: code }));
+    });
+    slot.appendChild(img);
+    img.src = meta ? LOGO_SVG + meta[0] + '/' + encodeURIComponent(meta[1]) + '/' + meta[1].toLowerCase().replace(/ /g, '-') + '.svg' : png;
     return slot;
   }
-  function mark(ok) {
-    var s = h('span', { class: 'mark ' + (ok ? 'ok' : 'bad'), role: 'img', 'aria-label': ok ? 'right' : 'wrong' });
-    s.innerHTML = '<svg viewBox="0 0 13 13" width="11" height="11">' + (ok
-      ? '<path d="M2.5 7l2.8 2.8L10.5 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
-      : '<path d="M3 3.5l7 7M10 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>';
-    return s;
-  }
-  function res(g, which, pick) { if (g.state !== 'final' || !pick) return ''; return (which === 0 ? g.cover : g.winner) === pick ? 'ok' : 'bad'; }
-  function head(g) {
-    var st = h('span', { class: 'st' });
-    if (g.state === 'live') { st.appendChild(h('span', { class: 'live-flag', text: 'LIVE' })); st.appendChild(document.createTextNode(' ' + g.clock)); }
-    else st.appendChild(document.createTextNode(g.state === 'final' ? 'Final' : g.when));
-    st.appendChild(h('b', { text: lineText(g) }));
-    var sc = g.score || ['–', '–'];
-    return h('th', { class: 'gm ' + g.state, scope: 'col' }, [
-      h('span', { class: 'ml' + (g.winner === g.away ? ' won' : '') }, [h('span', { text: g.away }), h('strong', { text: String(sc[0]) })]),
-      h('span', { class: 'ml' + (g.winner === g.home ? ' won' : '') }, [h('span', { text: g.home }), h('strong', { text: String(sc[1]) })]), st]);
-  }
-  function plCell(p, rows) { return h('td', { class: 'pl' + (p.me ? ' me' : ''), rowspan: rows || null }, [h('span', { class: 'nm', text: p.name }), h('span', { class: 'rc', text: p.record })]); }
 
-  // ---- New 1: game cards with names ----
-  (function () {
-    var root = document.getElementById('p');
-    root.appendChild(h('div', { class: 'standing', 'aria-label': 'Points this week' }, PLAYERS.map(function (p) {
-      return h('span', { class: p.me ? 'me' : '' }, [p.name + ' ', h('b', { text: String(p.points) })]);
-    }).concat([h('span', { class: 'none', text: 'points this week' })])));
-    GAMES.forEach(function (g) {
-      root.appendChild(h('h3', { class: 'kickoff-block', text: g.block }));
-      var stateCell = g.state === 'live' ? h('span', { class: 'state' }, [h('span', { class: 'live-flag', text: 'LIVE' }), '  ' + g.clock])
-        : h('span', { class: 'state', text: g.state === 'final' ? 'Final' : (g.tv || '') });
-      var board = h('div', { class: 'board' }, [stateCell, h('span', { class: 'col s', text: 'Spread' }), h('span', { class: 'col w', text: 'Winner' })]);
-      [g.away, g.home].forEach(function (a, i) {
-        board.appendChild(h('div', { class: 'tm' }, [logo(a), h('span', { class: 'who' }, [h('b', { text: a }), h('small', { text: nick(a) })])]));
-        board.appendChild(g.score ? h('span', { class: 'score' + (g.state === 'final' && g.winner !== a ? ' lost' : ''), text: String(g.score[i]) }) : h('span'));
-        if (g.state === 'open') {
-          if (i === 0) {
-            var inn = PLAYERS.filter(function (p) { return p.picks[g.id][0] && p.picks[g.id][1]; }).map(function (p) { return p.name; });
-            var out = PLAYERS.filter(function (p) { return !(p.picks[g.id][0] && p.picks[g.id][1]); }).map(function (p) { return p.name; });
-            var w = h('div', { class: 'wait', style: 'grid-row: span 2' }, [h('span', null, ['Picks show at kickoff.']),
-              inn.length ? h('span', null, [h('b', { text: 'In: ' }), inn.join(', ')]) : null,
-              out.length ? h('span', null, [h('b', { text: 'Not yet: ' }), out.join(', ')]) : null]);
-            board.appendChild(w);
-          }
+  // Times are always shown in Eastern time, like the pool's page.
+  function fmt(d, opts) {
+    opts.timeZone = TZ;
+    try { return new Intl.DateTimeFormat('en-US', opts).format(d).replace(/[\u202f\u00a0]/g, ' '); }
+    catch (e) { return d.toLocaleString(); }
+  }
+  function validDate(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function timeText(d) { return fmt(d, { hour: 'numeric', minute: '2-digit' }) + ' ET'; }
+  function hasKickTime(g) { return !!validDate(g && g.kickoff) && g.timeValid !== false && g.kickoffText !== 'TBD'; }
+  function kickoffTime(g) { return hasKickTime(g) ? timeText(validDate(g.kickoff)) : 'Time TBD'; }
+  // "Thursday, Nov 26 · 4:30 PM ET": every kickoff block's header carries the day and the time in full.
+  function kickoffBlock(g) {
+    var d = validDate(g.kickoff);
+    if (!d) return 'Kickoff TBD';
+    return fmt(d, { weekday: 'long', month: 'short', day: 'numeric' }) + ' · ' + kickoffTime(g);
+  }
+  function shortKick(g) {
+    var d = validDate(g.kickoff);
+    if (!d) return 'TBD';
+    return fmt(d, { weekday: 'short' }) + ' ' + (hasKickTime(g) ? timeText(d) : 'time TBD');
+  }
+  // "Thu 8:20p", "Fri 3p": for the narrow column heads of the Live grid.
+  function tinyKick(g) {
+    var d = validDate(g.kickoff);
+    if (!d) return 'TBD';
+    if (!hasKickTime(g)) return fmt(d, { weekday: 'short' }) + ' TBD';
+    return fmt(d, { weekday: 'short' }) + ' ' + fmt(d, { hour: 'numeric', minute: '2-digit' }).replace(':00', '').replace(/\s?([AP])M$/i, function (m, a) { return a.toLowerCase(); });
+  }
+  function stampText(iso) {
+    var d = validDate(iso);
+    if (!d) return '';
+    var day = fmt(d, { month: 'short', day: 'numeric' });
+    return day === fmt(new Date(), { month: 'short', day: 'numeric' }) ? timeText(d) : day + ', ' + timeText(d);
+  }
+
+  function spreadText(n) { n = Number(n); return n === 0 ? 'PK' : (n > 0 ? '+' : '−') + Math.abs(n); }   // a real minus sign
+  function hasLine(g) { return !!g && !!g.line && typeof g.line.home === 'number' && isFinite(g.line.home); }
+  function spreadOf(g, abbr) { return abbr === g.home ? g.line.home : -g.line.home; }
+  // The favorite on the line on screen: home when its number is negative, away when positive, nobody at 0.
+  function favoriteOf(g) { return !hasLine(g) ? '' : (g.line.home < 0 ? g.home : (g.line.home > 0 ? g.away : '')); }
+  function otherTeam(g, abbr) { return abbr === g.home ? g.away : g.home; }
+  function matchup(g) { return g.away + (g.neutral ? ' vs ' : ' @ ') + g.home; }
+  function lineText(g) {
+    if (!hasLine(g)) return '';
+    var fav = favoriteOf(g);
+    return fav ? fav + ' ' + spreadText(spreadOf(g, fav)) : 'PK';
+  }
+  // A record as it is drawn everywhere: "5-3" and, with ties, "6-3-1" get the same dash; anything else is shown as it came.
+  function recordText(v) {
+    var s = (v === null || v === undefined) ? '' : String(v);
+    var m = /^(\d+)-(\d+)(?:-(\d+))?$/.exec(s);
+    return m ? m[1] + '–' + m[2] + (m[3] === undefined ? '' : '–' + m[3]) : (s || '—');
+  }
+  function dash(v) { return (v === null || v === undefined || v === '') ? '—' : String(v); }
+  function scoresOf(g) {
+    var m = /^\s*(\d+)\s*[-–]\s*(\d+)\s*$/.exec(String((g && g.score) || ''));
+    return m ? [Number(m[1]), Number(m[2])] : null;
+  }
+  function scorePair(g) {
+    var sc = (g.status === 'live' || g.status === 'final') ? scoresOf(g) : null;
+    return sc ? [String(sc[0]), String(sc[1])] : ['–', '–'];
+  }
+  function gameStatusText(g) {
+    if (g.status === 'final') return g.statusText || 'Final';
+    if (g.status === 'live') return g.statusText || 'In progress';
+    if (g.status === 'canceled' || g.status === 'postponed') return g.statusText || (g.status === 'canceled' ? 'Canceled' : 'Postponed');
+    return tinyKick(g);
+  }
+  // Is any of these games being played right now (live, or past its kickoff and not yet marked)? Only then is
+  // it worth asking for fresh scores the moment something opens, rather than at the next minute.
+  function gamesOn(games) {
+    var now = Date.now();
+    return (games || []).some(function (g) {
+      if (g.status === 'live') return true;
+      if (g.status && g.status !== 'scheduled') return false;
+      var t = hasKickTime(g) ? Date.parse(g.kickoff) : NaN;
+      return isFinite(t) && t <= now;
+    });
+  }
+  function statusWord(v) { return String(v === null || v === undefined ? '' : v).replace(/[^A-Za-z ]/g, '').trim(); }
+
+  // ---------------------------------------------------------------
+  // Toast + dialogs
+  // ---------------------------------------------------------------
+  function toast(msg, ms) {
+    var t = els.toast;
+    t.textContent = msg;
+    t.className = 'toast show';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.className = 'toast'; }, ms || 4200);
+  }
+
+  function dialogOpen() { return !!els.modalRoot && els.modalRoot.childNodes.length > 0; }
+
+  var dialogSeq = 0;
+  function dialogBox(title, kids) {
+    var id = 'modal-title-' + (++dialogSeq);
+    return h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': id }, [h('h2', { class: 'modal-title', id: id, text: title })].concat(kids));
+  }
+
+  // Puts `box` up as a dialog. Returns the function that takes it down again (focus goes back to where it was).
+  function openModal(box, onDismiss, first) {
+    var prev = document.activeElement;
+    var backdrop = h('div', { class: 'modal-backdrop' }, box);
+    function onKey(e) {
+      if (e.key === 'Escape') { if (onDismiss) { e.preventDefault(); onDismiss(); } return; }
+      if (e.key !== 'Tab') return;
+      var list = box.querySelectorAll('button, input, select');
+      if (!list.length) return;
+      var a = document.activeElement, firstEl = list[0], lastEl = list[list.length - 1];
+      if (e.shiftKey && (a === firstEl || !box.contains(a))) { e.preventDefault(); focusEl(lastEl); }
+      else if (!e.shiftKey && (a === lastEl || !box.contains(a))) { e.preventDefault(); focusEl(firstEl); }
+    }
+    backdrop.addEventListener('click', function (e) { if (e.target === backdrop && onDismiss) onDismiss(); });
+    els.modalRoot.appendChild(backdrop);
+    document.addEventListener('keydown', onKey);
+    focusEl(first);
+    return function () {
+      if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+      document.removeEventListener('keydown', onKey);
+      if (prev && prev.isConnected) focusEl(prev);
+    };
+  }
+
+  // opts: { title, body, okText, cancelText, safe: 'ok' | 'cancel' (which answer is the main button) }
+  function confirmDialog(opts) {
+    return new Promise(function (resolve) {
+      var close = null;
+      function done(v) { if (close) close(); resolve(v); }
+      var okMain = opts.safe === 'ok';
+      var cancelBtn = h('button', { type: 'button', class: okMain ? 'btn-secondary' : 'btn-primary', text: opts.cancelText || 'Cancel', onclick: function () { done(false); } });
+      var okBtn = h('button', { type: 'button', class: okMain ? 'btn-primary' : 'btn-secondary', text: opts.okText || 'OK', onclick: function () { done(true); } });
+      var box = dialogBox(opts.title, [h('p', { class: 'modal-body', text: opts.body }), h('div', { class: 'modal-actions' }, [cancelBtn, okBtn])]);
+      close = openModal(box, function () { done(false); }, okMain ? okBtn : cancelBtn);
+    });
+  }
+
+  function guardUnsaved() {
+    if (!isDirty()) return Promise.resolve(true);
+    var label = (state.week && state.week.label) || 'this week';
+    return confirmDialog({
+      title: 'Unsaved picks',
+      body: possessive(state.me) + ' picks for ' + label + ' haven’t been saved yet. Leave without saving?',
+      okText: 'Discard changes', cancelText: 'Keep editing', safe: 'cancel'
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // The address is not in this page (design 10.2)
+  // ---------------------------------------------------------------
+  // The key ends where its own characters end: a full stop or a bracket that a message app glued onto the link is
+  // not part of it. Whether it is the RIGHT key is decided by its hash alone (keyIsRight), never here.
+  function keyFromAddress() {
+    var m = /(?:^#|&)k=([A-Za-z0-9_-]+)/.exec(String(window.location.hash || ''));
+    return m ? m[1] : '';
+  }
+
+  function sha256Hex(text) {
+    var subtle = window.crypto && window.crypto.subtle;
+    if (!subtle || typeof TextEncoder === 'undefined') return Promise.reject(new Error('no web crypto'));
+    return subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function (buf) {
+      var bytes = new Uint8Array(buf), hex = '';
+      for (var i = 0; i < bytes.length; i++) hex += (bytes[i] < 16 ? '0' : '') + bytes[i].toString(16);
+      return hex;
+    });
+  }
+
+  function keyIsRight(k) {
+    if (!/^[A-Za-z0-9_-]{16,200}$/.test(k || '')) return Promise.resolve(false);
+    return sha256Hex(k).then(function (hex) { return hex === KEY_SHA256; }, function () { return false; });
+  }
+
+  // Where this page may send its questions:
+  //   opened from a file            -> nowhere
+  //   the published page            -> the pool's address, built from the key in the invitation link, and only
+  //                                    when that key hashes to KEY_SHA256 (a link can never point it elsewhere)
+  //   any other http(s) origin      -> that origin's own /exec (the local preview server)
+  function resolveTransport() {
+    var loc = window.location, proto = String(loc.protocol || '');
+    if (proto !== 'http:' && proto !== 'https:') {
+      return Promise.resolve({ url: '', title: 'Not connected',
+        body: 'This page was opened from a file, so it is not connected to Spread Pick ’Em. Open it from your invitation link.' });
+    }
+    if (loc.origin !== PROD_ORIGIN) return Promise.resolve({ url: loc.origin + '/exec' });
+    var fromAddress = keyFromAddress(), stored = readStore(STORE.k);
+    var tries = [];
+    if (fromAddress) tries.push(fromAddress);
+    if (stored && stored !== fromAddress) tries.push(stored);
+    function next(i) {
+      if (i >= tries.length) {
+        if (stored) dropStore(STORE.k);
+        return { url: '', title: 'Invitation link needed', body: 'This page opens from your invitation link. Ask Joe for it.' };
+      }
+      return keyIsRight(tries[i]).then(function (ok) {
+        if (!ok) return next(i + 1);
+        if (tries[i] !== stored) writeStore(STORE.k, tries[i]);
+        return { url: EXEC_BASE + tries[i] + '/exec' };
+      });
+    }
+    return Promise.resolve(next(0));
+  }
+
+  // ---------------------------------------------------------------
+  // Talking to the server. post() is the bare request; api() is the one wrapper every tab uses: a refusal
+  // ({ ok:false, refused }) never reaches a tab's code. Unsaved picks stay, the sign-in comes up, and the
+  // same question is asked again afterwards (design 10.2, section 6).
+  // ---------------------------------------------------------------
+  function post(method, args) {
+    if (!transport.url) return Promise.reject(new Error('This page is not connected to Spread Pick ’Em.'));
+    var body = JSON.stringify({ method: method, args: args }), asked;
+    try {
+      asked = window.fetch(transport.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: body, credentials: 'omit' });
+    } catch (e) {
+      return Promise.reject(new Error('This browser can’t reach Spread Pick ’Em. Try a newer one.'));
+    }
+    return asked
+      .then(function (r) {
+        if (!r || !r.ok) throw new Error('Spread Pick ’Em answered with an error' + (r && r.status ? ' (' + r.status + ')' : '') + '. Try again in a minute.');
+        return r.text();
+      }, function () {
+        throw new Error('Couldn’t reach Spread Pick ’Em. Check your connection and try again.');
+      })
+      .then(function (text) {
+        var env = null;
+        try { env = JSON.parse(text); } catch (e) { env = null; }
+        if (!env || env.bridge !== 1) throw new Error('Spread Pick ’Em sent something this page does not understand. Try again in a minute.');
+        if (env.ok !== true) throw new Error(cleanMessage(env.error));
+        return env.result;
+      });
+  }
+
+  function isRefusal(res) {
+    return !!res && typeof res === 'object' && res.ok === false && (res.refused === 'signin' || res.refused === 'gate');
+  }
+
+  function refusedError(res) {
+    var err = new Error(res.message ? String(res.message) : 'Sign in to keep going.');
+    err.refused = res.refused;
+    return err;
+  }
+
+  // buildArgs(token) returns the arguments; it runs again for the repeat, with the new token.
+  // opts.quiet: the 60-second refresh. It never interrupts typing or another dialog.
+  function api(method, buildArgs, opts) {
+    opts = opts || {};
+    var rounds = 0;
+    if (!opts.quiet) state.reauthMuted = false;
+    function attempt() {
+      var sent = readStore(STORE.token);
+      return post(method, buildArgs(sent)).then(function (res) {
+        if (isRefusal(res)) {
+          // Nobody is signed in and this refusal has no list of names: it is the late answer to a question asked
+          // before "Sign out". It dies quietly. The opening question of the fresh start draws the sign-in screen
+          // (only its refusal carries the names).
+          if (!state.me && !Array.isArray(res.poolPlayers)) { var gone = refusedError(res); gone.signedOut = true; throw gone; }
+          if (opts.quiet && (state.reauthMuted || busyEditing())) throw refusedError(res);
+          if (++rounds > 3) throw new Error('Spread Pick ’Em keeps turning this sign-in away. Ask Joe to check it.');
+          return signInFor(res, sent).then(attempt);
+        }
+        if (!res || typeof res !== 'object' || res.ok !== true) throw new Error('Spread Pick ’Em sent an answer this page does not understand.');
+        return res;
+      });
+    }
+    return attempt();
+  }
+
+  function signInFor(res, sentToken) {
+    var now = readStore(STORE.token);
+    if (now && now !== sentToken) return Promise.resolve();        // another call's sign-in already went through
+    if (!signInWait) {
+      signInWait = (state.me ? signInAgain(res) : signInScreen(res, !!sentToken)).then(
+        function (v) { signInWait = null; return v; },
+        function (e) { signInWait = null; throw e; });
+    }
+    return signInWait;
+  }
+
+  // ---------------------------------------------------------------
+  // Sign-in (design 10.4): name, the player's own 4-digit PIN, the Admin PIN, one call. The Admin PIN is
+  // typed here and is never stored (10.3); the only thing kept on the phone is the beta's own token.
+  // opts: { players: [..] or null, fixed: a name or '', pins: {name: bool}, testersOpen, adminAvailable, done(res) }
+  // ---------------------------------------------------------------
+  function buildSignInForm(opts) {
+    var busy = false, create = false;
+    var pins = opts.pins || {};
+    var nameSel = null, nameRow;
+    if (opts.fixed) {
+      nameRow = h('div', { class: 'form-row' }, [h('div', { class: 'field-label', text: 'Signing in as' }), h('div', { class: 'who-fixed', text: opts.fixed })]);
+    } else {
+      nameSel = h('select', { id: 'signin-name' });
+      nameSel.appendChild(h('option', { value: '', text: 'Choose your name…' }));
+      (opts.players || []).forEach(function (p) { nameSel.appendChild(h('option', { value: String(p), text: String(p) })); });
+      nameRow = h('div', { class: 'form-row' }, [h('label', { for: 'signin-name', text: 'Your name' }), h('span', { class: 'select-wrap' }, [nameSel, mark('chev')])]);
+    }
+    function pinInput(id) {
+      return h('input', { type: 'password', class: 'text pin', id: id, inputmode: 'numeric', pattern: '[0-9]*', maxlength: 4,
+        autocomplete: 'off', enterkeyhint: 'next', placeholder: '••••' });
+    }
+    var pinLabel = h('label', { for: 'signin-pin' });
+    var pin = pinInput('signin-pin');
+    var pinHint = h('p', { class: 'hint' });
+    var pin2 = pinInput('signin-pin2');
+    var pin2Row = h('div', { class: 'form-row', hidden: true }, [h('label', { for: 'signin-pin2', text: 'Type it again' }), pin2]);
+    // The Admin PIN is any text (it is typed on the sheet), so the full keyboard must come up.
+    var admin = h('input', { type: 'password', class: 'text', id: 'signin-admin', autocomplete: 'off', enterkeyhint: 'go', maxlength: 32 });
+    var adminHint = h('p', { class: 'hint', text: opts.adminAvailable === false
+      ? 'The Admin PIN isn’t set up yet. Ask Joe.'
+      : (opts.testersOpen ? 'Leave this empty if Joe has added you as a tester.' : 'Joe gives this to testers.') });
+    var error = h('p', { class: 'form-error', id: 'signin-error', role: 'alert' });
+    var go = h('button', { type: 'button', class: 'btn-primary', id: 'signin-go', onclick: function () { submit(); } });
+
+    function who() { return opts.fixed || (nameSel ? nameSel.value : ''); }
+    function setMode(c) {
+      create = !!c;
+      pinLabel.textContent = create ? 'Choose a 4-digit PIN' : 'Your 4-digit PIN';
+      pinHint.textContent = create
+        ? 'You enter it once on each phone. Keep it to yourself: anyone with it can make picks as ' + (who() || 'you') + '. It is also your PIN for the family pool.'
+        : 'The same PIN you use for the family pool.';
+      pin2Row.hidden = !create;
+      go.textContent = busy ? 'Checking…' : (create ? 'Create PIN and sign in' : 'Sign in');
+    }
+    function setBusy(b) {
+      busy = b;
+      if (b) go.setAttribute('aria-disabled', 'true'); else go.removeAttribute('aria-disabled');
+      setMode(create);
+    }
+    function submit() {
+      if (busy) return;
+      var name = who();
+      if (!name) { error.textContent = 'Choose your name.'; focusEl(nameSel); return; }
+      var a = String(pin.value || '').trim();
+      if (!/^\d{4}$/.test(a)) { error.textContent = 'Your PIN is 4 digits.'; focusEl(pin); return; }
+      if (create && String(pin2.value || '').trim() !== a) { error.textContent = 'The two PINs don’t match.'; focusEl(pin2); return; }
+      var adminPin = String(admin.value || '').trim();
+      if (!adminPin && !opts.testersOpen) { error.textContent = 'Enter the Admin PIN.'; focusEl(admin); return; }
+      error.textContent = '';
+      setBusy(true);
+      post('api_spreadSignIn', [name, a, create, adminPin]).then(function (res) {
+        setBusy(false);
+        if (res && res.ok === true && res.token) {
+          admin.value = ''; pin.value = ''; pin2.value = '';
+          writeStore(STORE.token, String(res.token));
+          writeStore(STORE.player, String(res.player || name));
+          opts.done(res);
           return;
         }
-        [0, 1].forEach(function (which) {
-          var who = PLAYERS.filter(function (p) { return p.picks[g.id][which] === a; });
-          var r = g.state === 'final' ? ((which === 0 ? g.cover : g.winner) === a ? 'ok' : 'bad') : '';
-          var names = h('span', { class: 'names' });
-          if (!who.length) names.appendChild(h('span', { class: 'none', text: '—' }));
-          who.forEach(function (p, k) { if (k) names.appendChild(document.createTextNode(', ')); names.appendChild(h('span', { class: p.me ? 'me' : '', text: p.name })); });
-          board.appendChild(h('div', { class: 'cell ' + (which === 0 ? 's' : 'w') + (r && who.length ? ' ' + r : '') }, [
-            h('span', { class: 'lab', text: which === 0 ? sp(spreadOf(g, a)) : 'Win' }), names, r && who.length ? mark(r === 'ok') : null]));
-        });
+        var code = res && res.code;
+        if (code === 'exists') setMode(false);            // someone set this name's PIN meanwhile
+        else if (code === 'nopin') setMode(true);         // the PIN was reset: a new one is created now
+        error.textContent = (res && res.message) ? String(res.message) : 'That didn’t work. Try again.';
+        if (code === 'gate') { admin.value = ''; focusEl(admin); }
+        else { pin.value = ''; pin2.value = ''; focusEl(pin); }
+      }, function (e) {
+        setBusy(false);
+        error.textContent = cleanMessage(e);
       });
-      var card = h('div', { class: 'game' }, [board]);
-      if (g.state === 'final') card.appendChild(h('p', { class: 'note', text: g.winner + ' won ' + Math.max(g.score[0], g.score[1]) + '–' + Math.min(g.score[0], g.score[1]) +
-        (g.cover === g.winner ? ' and covered ' + sp(spreadOf(g, g.winner)) + '.' : ', but ' + g.cover + ' covered ' + sp(spreadOf(g, g.cover)) + '.') }));
-      root.appendChild(card);
-    });
-  })();
+    }
+    // Enter moves to the next empty box, and signs in from the last one.
+    function onEnter(inp, nextOf) {
+      inp.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        var nx = nextOf();
+        if (nx) focusEl(nx); else submit();
+      });
+    }
+    function adminNext() { return (!String(admin.value || '') && !opts.testersOpen) ? admin : null; }
+    onEnter(pin, function () { return (create && !String(pin2.value || '')) ? pin2 : adminNext(); });
+    onEnter(pin2, adminNext);
+    onEnter(admin, function () { return null; });
+    if (nameSel) {
+      nameSel.addEventListener('change', function () { error.textContent = ''; setMode(nameSel.value ? pins[nameSel.value] === false : false); });
+      var known = readStore(STORE.player);
+      if (known && (opts.players || []).map(String).indexOf(known) >= 0) nameSel.value = known;
+    }
+    setMode(who() ? pins[who()] === false : false);
+    var el = h('div', { class: 'signin-form' }, [
+      nameRow,
+      h('div', { class: 'form-row' }, [pinLabel, pin, pinHint]),
+      pin2Row,
+      h('div', { class: 'form-row' }, [h('label', { for: 'signin-admin', text: 'Admin PIN' }), admin, adminHint]),
+      error, go
+    ]);
+    return { el: el, first: (nameSel && !nameSel.value) ? nameSel : pin };
+  }
 
-  // ---- New 2: one call per square ----
-  (function () {
-    var thead = h('thead', null, [h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' })].concat(GAMES.map(head)))]);
+  // The first screen for a phone that is not signed in. It comes from the one refused bootstrap answer.
+  function signInScreen(res, hadToken) {
+    return new Promise(function (resolve) {
+      var players = Array.isArray(res.poolPlayers) ? res.poolPlayers : [];
+      var form = buildSignInForm({ players: players, fixed: '', pins: res.pins, testersOpen: res.testersOpen === true,
+        adminAvailable: res.adminAvailable, done: function () { resolve(); } });
+      var screen = h('div', { class: 'signin' }, [
+        h('h2', { text: 'Sign in' }),
+        h('p', { class: 'lead', text: 'Spread Pick ’Em is being tested. You play as yourself. Picks and standings here are separate from the family pool; only your PIN is shared.' }),
+        (hadToken && res.message) ? h('p', { class: 'lead', text: String(res.message) }) : null,
+        form.el
+      ]);
+      if (res.title) { try { document.title = String(res.title); } catch (e) { /* ignore */ } }
+      showGate(screen);
+      focusEl(form.first);
+    });
+  }
+
+  // The sign-in was turned away while the page is open (the Admin PIN changed, the PIN was reset, a name came
+  // off the testers). The picks on screen stay exactly as they are underneath this dialog.
+  function signInAgain(res) {
+    return new Promise(function (resolve, reject) {
+      var name = state.me, close = null;
+      var form = buildSignInForm({ players: null, fixed: name, pins: (state.boot && state.boot.pins) || {}, testersOpen: res.testersOpen === true,
+        adminAvailable: res.adminAvailable, done: function () { close(); toast('Signed in as ' + name + '.'); resolve(); } });
+      function notNow() {
+        close();
+        state.reauthMuted = true;
+        reject(refusedError(res));
+      }
+      var other = h('button', { type: 'button', class: 'link-btn', text: 'Not ' + name + '? Sign in as someone else', onclick: function () {
+        guardUnsaved().then(function (ok) {
+          if (!ok) return;
+          close();
+          var err = new Error('Signed out.');
+          err.signedOut = true;
+          reject(err);
+          signOutLocal();
+          start();
+        });
+      } });
+      var box = dialogBox('Sign in again', [
+        h('p', { class: 'modal-body', text: res.message ? String(res.message) : possessive(name) + ' sign-in on this phone is no longer good.' }),
+        form.el,
+        h('div', { class: 'modal-actions' }, [h('button', { type: 'button', class: 'btn-secondary', text: 'Not now', onclick: notNow })]),
+        other
+      ]);
+      close = openModal(box, notNow, form.first);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // The page's frame: header, tabs, the three views, save bar, toast
+  // ---------------------------------------------------------------
+  function buildShell() {
+    if (els.built) return;
+    els.built = true;
+    var app = $('app');
+    clear(app);
+
+    els.seasonLabel = h('div', { class: 'season-label', text: 'Beta' });
+    els.accountInitial = h('span', { class: 'account-initial', 'aria-hidden': 'true' });
+    els.accountName = h('span');
+    els.identityName = h('strong');
+    els.account = h('details', { class: 'account', hidden: true }, [
+      h('summary', null, [els.accountInitial, els.accountName, mark('chev')]),
+      h('div', { class: 'account-menu' }, [
+        h('div', null, ['Signed in as ', els.identityName]),
+        h('button', { type: 'button', class: 'link-btn', id: 'sign-out', text: 'Sign out', onclick: signOut })
+      ])
+    ]);
+    els.tabs = h('nav', { class: 'tabs', role: 'tablist', 'aria-label': 'Sections', hidden: true });
+    els.tab = {};
+    [['picks', 'Picks'], ['live', 'Live'], ['scoreboard', 'Scoreboard']].forEach(function (t) {
+      var b = h('button', { class: 'tab', type: 'button', role: 'tab', id: 'tab-' + t[0], 'aria-selected': t[0] === 'picks' ? 'true' : 'false',
+        'aria-controls': 'view-' + t[0], text: t[1], onclick: function () { setView(t[0]); } });
+      els.tab[t[0]] = b;
+      els.tabs.appendChild(b);
+    });
+    app.appendChild(h('header', { class: 'top' }, [
+      h('div', { class: 'title-row' }, [h('div', { class: 'brand' }, [h('h1', { class: 'title', text: "Spread Pick 'Em" }), els.seasonLabel]), els.account]),
+      els.tabs
+    ]));
+
+    els.gate = h('section', { id: 'view-gate', hidden: true });
+    els.weekSelect = h('select', { id: 'week-select', 'aria-label': 'Week', onchange: function () { chooseWeek(els.weekSelect.value); } });
+    els.pickingAs = h('strong');
+    els.summaryText = h('div');
+    els.refreshBtn = h('button', { type: 'button', class: 'link-btn', id: 'picks-refresh', text: 'Refresh', 'aria-label': 'Refresh this week', onclick: function () { refreshWeekQuietly('manual'); } });
+    els.weekSummary = h('div', { class: 'week-summary', id: 'week-summary', hidden: true }, [els.summaryText, els.refreshBtn]);
+    els.picksMeta = h('div', { class: 'meta-line', id: 'picks-meta', hidden: true });
+    els.picksContent = h('div', { class: 'cards', id: 'picks-content' });
+    els.liveContent = h('div', { class: 'boardview', id: 'live-content' });
+    els.scoreboardContent = h('div', { class: 'boardview', id: 'scoreboard-content' });
+    els.weekField = h('div', { class: 'field' }, [h('label', { for: 'week-select', text: 'Week' }), h('span', { class: 'select-wrap' }, [els.weekSelect, mark('chev')])]);
+    els.view = {
+      picks: h('section', { id: 'view-picks', role: 'tabpanel', 'aria-labelledby': 'tab-picks', hidden: true }, [
+        h('div', { class: 'controls' }, [els.weekField, h('div', { class: 'as' }, ['Picking as ', els.pickingAs])]),
+        els.weekSummary, els.picksMeta, els.picksContent
+      ]),
+      live: h('section', { id: 'view-live', role: 'tabpanel', 'aria-labelledby': 'tab-live', hidden: true }, els.liveContent),
+      scoreboard: h('section', { id: 'view-scoreboard', role: 'tabpanel', 'aria-labelledby': 'tab-scoreboard', hidden: true }, els.scoreboardContent)
+    };
+    app.appendChild(h('main', null, [els.gate, els.view.picks, els.view.live, els.view.scoreboard]));
+
+    els.saveCount = h('span', { class: 'count', id: 'save-count', text: 'Loading…' });
+    els.unsaved = h('span', { class: 'unsaved', id: 'unsaved', text: 'Unsaved changes', hidden: true });
+    els.saveBtn = h('button', { class: 'btn-primary', type: 'button', id: 'save-btn', 'aria-disabled': 'true', text: 'Save picks', onclick: save });
+    els.savebar = h('div', { class: 'savebar', id: 'savebar', hidden: true },
+      h('div', { class: 'savebar-inner' }, [h('div', { class: 'meta' }, [els.saveCount, els.unsaved]), els.saveBtn]));
+    els.toast = h('div', { class: 'toast', id: 'toast', role: 'status', 'aria-live': 'polite' });
+    els.modalRoot = h('div', { id: 'modal-root' });
+    document.body.appendChild(els.savebar);
+    document.body.appendChild(els.toast);
+    document.body.appendChild(els.modalRoot);
+
+    document.addEventListener('visibilitychange', onVisibility);
+    document.addEventListener('click', function (e) { if (els.account.open && !els.account.contains(e.target)) els.account.open = false; });
+    window.addEventListener('beforeunload', function (e) { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+    window.addEventListener('hashchange', function () { if (!transport.url) boot(); });
+  }
+
+  // The sign-in screen and the "not connected" notices take the whole page: no tabs, no save bar.
+  function showGate(node) {
+    clear(els.gate);
+    els.gate.appendChild(node);
+    els.gate.hidden = false;
+    els.tabs.hidden = true;
+    els.account.hidden = true;
+    els.view.picks.hidden = true; els.view.live.hidden = true; els.view.scoreboard.hidden = true;
+    els.savebar.hidden = true;
+  }
+
+  function showApp() {
+    clear(els.gate);
+    els.gate.hidden = true;
+    els.tabs.hidden = false;
+    els.account.hidden = false;
+    els.accountName.textContent = state.me;
+    els.accountInitial.textContent = state.me.slice(0, 1);
+    els.identityName.textContent = state.me;
+    els.pickingAs.textContent = state.me;
+    els.view.picks.hidden = state.view !== 'picks';
+    els.view.live.hidden = state.view !== 'live';
+    els.view.scoreboard.hidden = state.view !== 'scoreboard';
+    renderSavebar();
+  }
+
+  function noticeCard(title, body, actionText, onAction) {
+    return h('div', { class: 'card notice' }, [
+      h('div', { class: 'notice-title', text: title }),
+      h('div', { class: 'notice-body', text: body }),
+      actionText ? h('button', { type: 'button', class: 'btn-secondary', text: actionText, onclick: onAction }) : null
+    ]);
+  }
+
+  function skeleton(target, rows, block) {
+    clear(target);
+    var wrap = h('div', { 'aria-hidden': 'true' });
+    wrap.appendChild(h('div', { class: 'skeleton sk-line' }));
+    for (var i = 0; i < rows; i++) wrap.appendChild(h('div', { class: 'skeleton ' + (block ? 'sk-block' : 'sk-row') }));
+    target.appendChild(wrap);
+  }
+
+  // ---------------------------------------------------------------
+  // Picks: what is on screen against what the server holds
+  // ---------------------------------------------------------------
+  function emptyPick() { return { ats: '', ml: '', shown: null }; }
+  function pickOf(g) { return state.picks[g.eventId] || (state.picks[g.eventId] = emptyPick()); }
+  function loadedOf(g) { return state.loaded.picks[g.eventId] || (state.loaded.picks[g.eventId] = { ats: '', ml: '' }); }
+
+  function parseGuessInput(raw) {
+    var s = String(raw === null || raw === undefined ? '' : raw).trim();
+    if (s === '') return { ok: true, value: null };
+    if (!/^\d+(\.\d+)?$/.test(s)) return { ok: false, value: null };
+    var n = Number(s);
+    if (!isFinite(n) || n < 0 || n > 200) return { ok: false, value: null };
+    return { ok: true, value: n };
+  }
+  function guessDirty() {
+    var g = parseGuessInput(state.tbGuess);
+    return !g.ok || g.value !== state.loaded.tbGuess;
+  }
+  function gameDirty(g) {
+    var p = pickOf(g), l = loadedOf(g);
+    return p.ats !== l.ats || p.ml !== l.ml;
+  }
+  function isDirty() {
+    if (!state.week) return false;
+    return (state.week.games || []).some(gameDirty) || guessDirty();
+  }
+
+  function sortedGames(w) {
+    return (w.games || []).map(function (g, i) { return { g: g, i: i, t: Date.parse(g.kickoff) }; }).sort(function (a, b) {
+      var x = isFinite(a.t) ? a.t : Infinity, y = isFinite(b.t) ? b.t : Infinity;
+      return x === y ? a.i - b.i : (x < y ? -1 : 1);
+    }).map(function (o) { return o.g; });
+  }
+
+  // Which games, in which kickoff blocks, with which teams and which tiebreaker game: when this is unchanged
+  // the cards on screen are updated in place.
+  function shapeOf(w) {
+    return sortedGames(w).map(function (g) { return [g.eventId, g.away, g.home, kickoffBlock(g)].join('|'); }).join('\n') +
+      '\n' + (w.tbGame ? String(w.tbGame.eventId) : '');
+  }
+
+  // A week as it arrives for the first time (a new week chosen, or the page opening): nothing is unsaved yet.
+  function adoptWeek(w) {
+    state.week = w;
+    state.picks = {};
+    state.loaded = { picks: {}, tbGuess: numOrNull(w.tbGuess) };
+    (w.games || []).forEach(function (g) {
+      var a = g.ats ? String(g.ats) : '', m = g.ml ? String(g.ml) : '';
+      state.picks[g.eventId] = { ats: a, ml: m, shown: null };
+      state.loaded.picks[g.eventId] = { ats: a, ml: m };
+    });
+    state.tbGuess = state.loaded.tbGuess === null ? '' : String(state.loaded.tbGuess);
+    state.weekAt = Date.now();
+    state.weekJson = JSON.stringify(w);
+    syncWeekOption(w);
+    saveCache();
+  }
+
+  // One game's fresh server answer against what is on screen. `was` is what the server held when the screen
+  // was last in step with it (or what a save just sent). A choice that differs from `was` is the player's own
+  // unsaved choice and is kept; everything else follows the server. An unsaved choice on a game that has
+  // kicked off (or dropped out of the spread game) is put back. The favorite lock is then applied again
+  // against the line that is now on screen.
+  function mergePick(p, was, g) {
+    var out = { ats: g.ats ? String(g.ats) : '', ml: g.ml ? String(g.ml) : '', shown: null };
+    var atsMine = p.ats !== was.ats, mlMine = p.ml !== was.ml;
+    if (!atsMine && !mlMine) return { pick: out, putBack: false };
+    if (g.locked || g.counted === false) return { pick: out, putBack: out.ats !== p.ats || out.ml !== p.ml };
+    if (atsMine && (!p.ats || hasLine(g))) { out.ats = p.ats; out.shown = p.shown; }      // a spread pick needs a line (D8)
+    if (mlMine) out.ml = p.ml;
+    var fav = favoriteOf(g);
+    if (fav && out.ats === fav) out.ml = fav;
+    return { pick: out, putBack: false };
+  }
+
+  function replaceFields(target, from) {
+    Object.keys(target).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(from, k)) delete target[k]; });
+    Object.keys(from).forEach(function (k) { target[k] = from[k]; });
+  }
+
+  // Fresh server data for the week on screen (the 60-second refresh, Refresh, the page's first fresh answer).
+  // Everything is taken from it except the player's unsaved choices (design 10.4).
+  function mergeWeek(w) {
+    var old = state.week, byId = {}, picks = {}, loaded = {}, putBack = [];
+    (old.games || []).forEach(function (g) { byId[g.eventId] = g; });
+    var games = (w.games || []).map(function (ng) {
+      var p = state.picks[ng.eventId] || emptyPick();
+      var was = state.loaded.picks[ng.eventId] || { ats: '', ml: '' };
+      var g = byId[ng.eventId];
+      if (g) replaceFields(g, ng); else g = ng;        // the card's buttons hold on to the game object
+      var m = mergePick(p, was, g);
+      if (m.putBack) putBack.push(g);
+      picks[g.eventId] = m.pick;
+      loaded[g.eventId] = { ats: g.ats ? String(g.ats) : '', ml: g.ml ? String(g.ml) : '' };
+      return g;
+    });
+    var guess = numOrNull(w.tbGuess), tbBack = false;
+    if (!guessDirty()) state.tbGuess = guess === null ? '' : String(guess);
+    else if (w.tbLocked) { tbBack = true; state.tbGuess = guess === null ? '' : String(guess); }
+    replaceFields(old, w);
+    old.games = games;
+    state.picks = picks;
+    state.loaded = { picks: loaded, tbGuess: guess };
+    return { putBack: putBack, tbBack: tbBack };
+  }
+
+  // `afterSave`: this refresh followed a save the server refused because of a kickoff.
+  function announcePutBack(res, afterSave) {
+    var parts = [];
+    var kicked = res.putBack.filter(function (g) { return !!g.locked; }), dropped = res.putBack.filter(function (g) { return !g.locked; });
+    if (kicked.length === 1) parts.push(matchup(kicked[0]) + ' has kicked off, so your unsaved change there was put back.');
+    else if (kicked.length > 1) parts.push(kicked.map(matchup).join(' and ') + ' have kicked off, so your unsaved changes there were put back.');
+    dropped.forEach(function (g) { parts.push(matchup(g) + ' is no longer in the spread game, so your unsaved change there was put back.'); });
+    if (res.tbBack) parts.push('The tiebreaker game has kicked off, so your unsaved total points guess was put back.');
+    if (!parts.length) return false;
+    if (afterSave) { parts.unshift('Not saved.'); if (isDirty()) parts.push('Tap Save again for the rest.'); }
+    toast(parts.join(' '), 9000);
+    return true;
+  }
+
+  // ---------------------------------------------------------------
+  // Picks: taps. The page applies the favorite lock at once; the server stays the authority.
+  // ---------------------------------------------------------------
+  function lockedToast(g) { toast(g.status === 'final' ? 'This game is final.' : 'Kicked off. These picks are locked.'); }
+
+  function tapSpread(g, abbr) {
+    if (g.counted === false) return;
+    if (g.locked) { lockedToast(g); return; }
+    if (!hasLine(g)) { noLineToast(g); return; }
+    var p = pickOf(g), fav = favoriteOf(g);
+    p.ats = p.ats === abbr ? '' : abbr;
+    p.shown = p.ats ? g.line.home : null;                 // the home spread on screen when it was tapped
+    if (p.ats && p.ats === fav && p.ml !== fav) {
+      p.ml = fav;                                         // taking the favorite locks the winner pick
+      toast('You took ' + fav + ' ' + spreadText(spreadOf(g, fav)) + ', so ' + fav + ' is your winner too.');
+    }
+    afterTap(g);
+  }
+
+  function tapWinner(g, abbr) {
+    if (g.counted === false) return;
+    if (g.locked) { lockedToast(g); return; }
+    var p = pickOf(g), fav = favoriteOf(g);
+    if (fav && p.ats === fav) {
+      var dog = otherTeam(g, fav);
+      toast('Your winner is locked to ' + fav + ' because you took ' + fav + ' ' + spreadText(spreadOf(g, fav)) + '. Take ' + dog + ' ' +
+        spreadText(spreadOf(g, dog)) + ' to choose the winner yourself.', 6500);
+      return;
+    }
+    p.ml = p.ml === abbr ? '' : abbr;
+    afterTap(g);
+  }
+
+  function noLineToast(g) {
+    toast('There is no line yet for ' + matchup(g) + '. Pick the winner now and the spread once a line is posted.', 6000);
+  }
+
+  function afterTap(g) {
+    updateCard(g);
+    renderSummary();
+    renderSavebar();
+    updateSoon();
+  }
+
+  // ---------------------------------------------------------------
+  // Picks: drawing
+  // ---------------------------------------------------------------
+  function renderNoWeeks() {
+    clear(els.picksContent);
+    var b = state.boot || {};
+    var card = b.open === false
+      ? noticeCard('Not open yet', 'Spread Pick ’Em hasn’t started. Joe will say when it opens.')
+      : noticeCard('No games yet', 'There are no games to pick right now.');
+    // The page asks again by itself every minute (pollForOpening). This link asks now, and every tap gets an answer.
+    var asking = false;
+    var link = h('button', { type: 'button', class: 'link-btn', text: 'Refresh', onclick: function () {
+      if (asking) { toast('Already refreshing.'); return; }
+      asking = true;
+      link.textContent = 'Refreshing…';
+      pollForOpening(true).then(function () { asking = false; link.textContent = 'Refresh'; });
+    } });
+    card.appendChild(link);
+    els.picksContent.appendChild(card);
+    els.weekSummary.hidden = true;
+    els.picksMeta.hidden = true;
+  }
+
+  function renderPicksError(err) {
+    clear(els.picksContent);
+    els.picksContent.appendChild(noticeCard('Couldn’t load this week', cleanMessage(err), 'Try again', function () { loadWeek(); }));
+    els.weekSummary.hidden = true;
+    els.picksMeta.hidden = true;
+  }
+
+  function pickButton(kind, g, abbr) {
+    return h('button', { type: 'button', class: 'pick ' + kind, 'aria-pressed': 'false', 'data-team': String(abbr),
+      onclick: function () { if (kind === 's') tapSpread(g, abbr); else tapWinner(g, abbr); } });
+  }
+
+  function buildGameCard(g) {
+    var card = { sides: {} };
+    card.stateEl = h('span', { class: 'state' });
+    card.colS = h('span', { class: 'col', text: 'Spread' });
+    card.colW = h('span', { class: 'col', text: 'Winner' });
+    // D8: until a line is posted the card offers only the winner pick. This stands where both Spread buttons
+    // would be; a tap says why.
+    card.noLine = h('button', { type: 'button', class: 'pick noline', 'aria-disabled': 'true', text: 'No line yet', hidden: true,
+      onclick: function () { noLineToast(g); } });
+    var board = h('div', { class: 'board' }, [card.stateEl, card.colS, card.colW]);
+    ['away', 'home'].forEach(function (side, i) {
+      var abbr = g[side];
+      var row = {
+        abbr: abbr,
+        rec: h('span', { class: 'rec', hidden: true }),
+        sideText: h('span'),
+        score: h('span', { class: 'score' }),
+        s: pickButton('s', g, abbr),
+        w: pickButton('w', g, abbr)
+      };
+      board.appendChild(h('div', { class: 'tm' }, [teamLogo(abbr), h('span', { class: 'who' }, [
+        h('b', null, [String(abbr), row.rec]),
+        h('small', null, [h('span', { class: 'nick', text: teamNickname(abbr) + ' · ' }), row.sideText])
+      ])]));
+      board.appendChild(row.score);
+      board.appendChild(row.s);
+      if (i === 0) board.appendChild(card.noLine);
+      board.appendChild(row.w);
+      card.sides[side] = row;
+    });
+    card.notes = h('div', { class: 'notes' });
+    card.el = h('div', { class: 'game', 'data-event': String(g.eventId) }, [board, card.notes]);
+    return card;
+  }
+
+  function paintPick(btn, kind, text, pressed, classes, markKind, off, label) {
+    clear(btn);
+    btn.appendChild(document.createTextNode(text));
+    if (markKind) btn.appendChild(mark(markKind));
+    btn.className = 'pick ' + kind + (classes ? ' ' + classes : '');
+    btn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+    if (off) btn.setAttribute('aria-disabled', 'true'); else btn.removeAttribute('aria-disabled');
+    btn.setAttribute('aria-label', label);
+  }
+
+  function resultOf(correct) { return correct === true ? 'ok' : (correct === false ? 'bad' : ''); }
+  function resultWords(r) { return r === 'ok' ? ' Right.' : (r === 'bad' ? ' Wrong.' : ''); }
+
+  // "LAR won 27–20 and covered −2.5."
+  function resultSentence(g) {
+    var sc = scoresOf(g);
+    if (!sc) return '';
+    var hi = Math.max(sc[0], sc[1]), lo = Math.min(sc[0], sc[1]), score = hi + '–' + lo;
+    var w = g.winner || (sc[0] === sc[1] ? 'TIE' : (sc[0] > sc[1] ? g.away : g.home));
+    var c = g.cover || '', line = hasLine(g);
+    var coveredBy = (c === g.away || c === g.home) && line ? c : '';
+    if (w === 'TIE') {
+      if (c === 'PUSH') return 'Tied ' + score + ' on a pick ’em (PK) line: everyone gets both points.';
+      return 'Tied ' + score + ': everyone gets the winner point.' + (coveredBy ? ' ' + coveredBy + ' covered ' + spreadText(spreadOf(g, coveredBy)) + '.' : '');
+    }
+    if (c === 'PUSH') return w + ' won ' + score + '. Landed on the spread: everyone gets the spread point.';
+    if (!coveredBy) return w + ' won ' + score + '.';
+    if (coveredBy === w) return w + ' won ' + score + (g.line.home === 0 ? ' on a pick ’em (PK) line, so ' + w + ' covered too.' : ' and covered ' + spreadText(spreadOf(g, w)) + '.');
+    return w + ' won ' + score + ', but ' + coveredBy + ' covered ' + spreadText(spreadOf(g, coveredBy)) + '.';
+  }
+
+  function leftOutText(g) {
+    if (g.why === 'before-start') return 'Left out: this game kicked off before the beta started.';
+    if (g.why === 'no-line') return 'Left out: no line was posted before kickoff.';
+    if (g.why === 'no-score') return 'Left out: the final score is missing, so it can’t be graded.';
+    if (g.why === 'canceled') return 'Left out: this game was canceled.';
+    return 'Left out of the spread game.';
+  }
+
+  // What the spread was when the pick was made, when it is no longer that. An unsaved pick compares with the
+  // number that was on screen when it was tapped; a saved one uses the server's `seen` and `moved`.
+  function movedInfo(g, p) {
+    if (!hasLine(g) || !p.ats || (p.ats !== g.away && p.ats !== g.home)) return null;
+    var now = spreadOf(g, p.ats), was;
+    if (p.ats !== loadedOf(g).ats) {
+      if (typeof p.shown !== 'number') return null;
+      was = p.ats === g.home ? p.shown : -p.shown;
+    } else {
+      if (g.moved !== true || typeof g.seen !== 'number') return null;
+      was = g.seen;
+    }
+    return was === now ? null : { team: p.ats, was: was, now: now };
+  }
+
+  function updateCard(g) {
+    var card = cardMap[g.eventId];
+    if (!card) return;
+    var p = pickOf(g), out = g.counted === false, line = hasLine(g), fav = favoriteOf(g);
+    var fin = g.status === 'final', open = !out && !g.locked, graded = fin && !out;
+    var favLock = open && !!fav && p.ats === fav;
+    var sc = scoresOf(g), showScore = (g.status === 'live' || fin) && !!sc;
+    card.el.className = 'game' + (out ? ' out' : '');
+
+    // The game's own state, at the left of the row that labels the two columns: the TV network when upcoming,
+    // LIVE and the clock when live, Final when finished. The kickoff time is in the block header, once.
+    clear(card.stateEl);
+    if (g.status === 'live') {
+      card.stateEl.appendChild(h('span', { class: 'live-flag', text: 'LIVE' }));
+      if (g.statusText) card.stateEl.appendChild(document.createTextNode('  ' + g.statusText));
+    } else if (fin || g.status === 'canceled' || g.status === 'postponed') {
+      card.stateEl.appendChild(document.createTextNode(gameStatusText(g)));
+    } else if (g.network) {
+      card.stateEl.appendChild(document.createTextNode(String(g.network)));
+    }
+    card.colS.hidden = out;
+    card.colW.hidden = out;
+    card.noLine.hidden = out || line;
+
+    ['away', 'home'].forEach(function (side, i) {
+      var row = card.sides[side], abbr = row.abbr, record = g[side + 'Record'] || '';
+      row.rec.textContent = record ? recordText(record) : '';
+      row.rec.hidden = !record;
+      row.sideText.textContent = g.neutral ? 'neutral site' : side;
+      row.score.textContent = showScore ? String(sc[i]) : '';
+      row.score.className = 'score' + (fin && g.winner && g.winner !== 'TIE' && g.winner !== abbr ? ' lost' : '');
+
+      row.s.hidden = out || !line;
+      if (!row.s.hidden) {
+        var isAts = p.ats === abbr, sText = spreadText(spreadOf(g, abbr));
+        var sRes = (graded && isAts) ? resultOf(g.atsCorrect) : '';
+        paintPick(row.s, 's', sText, isAts, [sRes, open ? '' : 'fixed'].filter(Boolean).join(' '), sRes, !open,
+          teamName(abbr) + ' ' + sText + ' against the spread.' + (isAts ? ' Your pick.' + resultWords(sRes) : ''));
+      }
+      row.w.hidden = out;
+      if (!out) {
+        var isMl = p.ml === abbr, na = favLock && abbr !== fav, held = favLock && abbr === fav;
+        var wRes = (graded && isMl) ? resultOf(g.mlCorrect) : '';
+        paintPick(row.w, 'w', 'Win', isMl, [wRes, open ? '' : 'fixed', na ? 'na' : ''].filter(Boolean).join(' '), wRes || (held ? 'lock' : ''), !open || na,
+          teamName(abbr) + ' to win.' + (isMl ? ' Your pick.' + resultWords(wRes) : '') +
+          (held ? ' Locked, because you took ' + fav + ' against the spread.' : '') + (na ? ' Not available while ' + fav + ' is your spread pick.' : ''));
+      }
+    });
+
+    var notes = card.notes;
+    clear(notes);
+    function note(cls, kids) { notes.appendChild(h('p', { class: 'note' + (cls ? ' ' + cls : '') }, kids)); }
+    if (out) { note('', leftOutText(g)); return; }
+    if (fin) {
+      var sentence = resultSentence(g);
+      if (sentence) note('result', sentence);
+      var noAts = !p.ats && g.atsCorrect === false, noMl = !p.ml && g.mlCorrect === false;
+      if (noAts && noMl) note('', 'No picks made: both count as misses.');
+      else if (noAts) note('', 'No spread pick: it counts as a miss.');
+      else if (noMl) note('', 'No winner pick: it counts as a miss.');
+      return;
+    }
+    if (g.locked) note('', line ? 'Kicked off. Picks are locked at ' + lineText(g) + '.' : 'Kicked off. Picks are locked.');
+    else if (favLock) note('', [h('strong', { text: fav + ' ' + spreadText(spreadOf(g, fav)) }), ' locks ' + fav + ' as your winner.']);
+    // Half a game: taking a favorite fills in the winner and says so, so taking an underdog has to ask for it.
+    else if (line && p.ats && !p.ml) note('', 'Now pick the winner: tap Win for ' + g.away + ' or ' + g.home + '.');
+    else if (line && p.ml && !p.ats) note('', 'Still needs a spread pick.');
+    var mv = movedInfo(g, p);
+    if (mv) {
+      note('', [(g.locked ? 'Line moved after you picked: ' : 'Line moved since you picked: ') + mv.team + ' was ', h('strong', { text: spreadText(mv.was) }),
+        g.locked ? ', and closed at ' : ', now ', h('strong', { text: spreadText(mv.now) }), '.']);
+    }
+  }
+
+  // ---- total points ----
+  function buildTbCard() {
+    var input = h('input', { type: 'text', inputmode: 'numeric', id: 'tb-input', autocomplete: 'off', enterkeyhint: 'done', maxlength: 3,
+      'aria-label': 'Your total points guess' });
+    var r = {
+      input: input,
+      title: h('div', { class: 'tb-title' }),
+      game: h('div', { class: 'tb-game' }),
+      ouValue: h('strong'),
+      lock: h('p', { class: 'note', hidden: true }),
+      actual: h('div', { class: 'tb-actual', hidden: true }),
+      why: ''
+    };
+    r.ou = h('span', { hidden: true }, ['Over/under ', r.ouValue]);      // the over/under appears here and nowhere else
+    input.addEventListener('input', function () { state.tbGuess = input.value; updateTbActual(); renderSavebar(); });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
+    input.addEventListener('click', function () { if (r.why) toast(r.why); });
+    tbRefs = r;
+    return h('div', { class: 'tb-card' }, [r.title, r.game, input,
+      h('div', { class: 'tb-ref' }, [h('span', { text: 'Closest guess wins a tied week.' }), r.ou]), r.lock, r.actual]);
+  }
+
+  function updateTbActual() {
+    if (!tbRefs || !state.week) return;
+    var actual = numOrNull(state.week.tbActual), r = tbRefs;
+    if (actual === null) { r.actual.hidden = true; r.actual.textContent = ''; return; }
+    var guess = parseGuessInput(state.tbGuess);
+    r.actual.textContent = 'Final total: ' + actual + '.' + ((guess.ok && guess.value !== null) ? ' You were off by ' + Math.abs(guess.value - actual) + '.' : '');
+    r.actual.hidden = false;
+  }
+
+  function updateTbCard() {
+    if (!tbRefs || !state.week) return;
+    var w = state.week, tb = w.tbGame || null, r = tbRefs, tbGame = null;
+    if (tb) (w.games || []).forEach(function (g) { if (String(g.eventId) === String(tb.eventId)) tbGame = g; });
+    var d = tb ? validDate(tb.kickoff) : null;
+    var when = (d && tb.kickoffText !== 'TBD') ? fmt(d, { weekday: 'long' }) + ' ' + timeText(d) : '';
+    r.title.textContent = 'Tiebreaker' + (when ? ' · ' + when : '');
+    r.game.textContent = tb ? 'Total points in ' + tb.away + ((tbGame && tbGame.neutral) ? ' vs ' : ' @ ') + tb.home : 'Tiebreaker game: to be decided';
+    if (document.activeElement !== r.input) r.input.value = state.tbGuess;
+    var locked = !!w.tbLocked, decided = numOrNull(w.tbActual) !== null;
+    r.why = !tb ? 'The tiebreaker game isn’t set yet.' : (locked ? 'Kicked off. Your total points guess is locked.' : '');
+    r.input.readOnly = !!r.why;
+    if (r.why) { r.input.setAttribute('aria-readonly', 'true'); r.input.removeAttribute('placeholder'); }
+    else { r.input.removeAttribute('aria-readonly'); r.input.setAttribute('placeholder', '45'); }
+    var ou = numOrNull(w.tbOverUnder);
+    r.ouValue.textContent = ou === null ? '' : String(ou);
+    r.ou.hidden = ou === null;
+    r.lock.textContent = 'Kicked off. Your guess is locked.';
+    r.lock.hidden = !(locked && !decided);
+    updateTbActual();
+  }
+
+  // "2 games kick off within 3 hours and still need a pick: …" Open games only, checked again on every tap and
+  // every refresh (time passes even when nothing else changes).
+  function updateSoon() {
+    if (!soonEl) return;
+    var w = state.week, now = Date.now();
+    var list = (w ? sortedGames(w) : []).filter(function (g) {
+      if (g.locked || g.counted === false || !hasKickTime(g)) return false;
+      var p = pickOf(g);
+      if (p.ml && (p.ats || !hasLine(g))) return false;
+      var t = Date.parse(g.kickoff);
+      return isFinite(t) && t > now && t - now <= SOON_MS;
+    });
+    clear(soonEl);
+    if (!list.length) { soonEl.hidden = true; return; }
+    soonEl.appendChild(h('strong', { text: list.length === 1 ? '1 game kicks off within 3 hours' : list.length + ' games kick off within 3 hours' }));
+    soonEl.appendChild(document.createTextNode(' and still ' + (list.length === 1 ? 'needs' : 'need') + ' a pick: ' +
+      list.map(function (g) { return matchup(g) + ' (' + shortKick(g) + ')'; }).join(', ') + '.'));
+    soonEl.hidden = false;
+  }
+
+  // "x of y games picked" counts GAMES with both picks in, over games that count or could still count.
+  function countPicked() {
+    var x = 0, y = 0;
+    ((state.week && state.week.games) || []).forEach(function (g) {
+      if (g.counted === false) return;
+      y++;
+      var p = pickOf(g);
+      if (p.ats && p.ml) x++;
+    });
+    return { x: x, y: y };
+  }
+
+  // The open games that hold exactly one of their two picks, first kickoff first. A game with no line yet is not
+  // one of them: its winner is all that can be picked (D8).
+  function halfPicked() {
+    return sortedGames(state.week).filter(function (g) {
+      if (g.locked || g.counted === false || !hasLine(g)) return false;
+      var p = pickOf(g);
+      return !p.ats !== !p.ml;
+    });
+  }
+
+  function renderSummary() {
+    var w = state.week;
+    if (!w) { els.weekSummary.hidden = true; return; }
+    var c = countPicked();
+    clear(els.summaryText);
+    els.summaryText.appendChild(h('strong', { text: c.x + ' of ' + c.y }));
+    els.summaryText.appendChild(document.createTextNode(' games picked' + (/\d/.test(String(w.record || '')) ? ' · ' + recordText(w.record) + ' so far' : '')));
+    els.weekSummary.hidden = false;
+  }
+
+  function renderPicksMeta() {
+    var m = els.picksMeta;
+    if (!state.week) { m.hidden = true; return; }
+    if (state.stale) m.textContent = state.staleFailed ? 'Couldn’t update. This is what this phone last had.' : 'Updating…';
+    else {
+      var at = stampText(state.week.linesAt || (state.boot && state.boot.linesAt));
+      m.textContent = 'Updates every minute' + (at ? ' · Lines checked ' + at : '');
+    }
+    m.hidden = false;
+  }
+
+  function renderWeek() {
+    var w = state.week, c = els.picksContent;
+    clear(c);
+    cardMap = {};
+    tbRefs = null;
+    soonEl = h('div', { class: 'soon', role: 'status', hidden: true });
+    c.appendChild(soonEl);
+    renderSummary();
+    renderPicksMeta();
+    var games = sortedGames(w);
+    if (!games.length) { c.appendChild(noticeCard('No games yet', 'The schedule for ' + (w.label || 'this week') + ' hasn’t been set.')); return; }
+    var block = '';
+    games.forEach(function (g) {
+      var next = kickoffBlock(g);
+      if (next !== block) { c.appendChild(h('h3', { class: 'kickoff-block' }, h('span', { text: next }))); block = next; }
+      var card = buildGameCard(g);
+      cardMap[g.eventId] = card;
+      c.appendChild(card.el);
+      updateCard(g);
+    });
+    c.appendChild(buildTbCard());
+    updateTbCard();
+    updateSoon();
+    var first = validDate(games[0].kickoff);
+    if (first) {
+      var year = first.getUTCFullYear() - (first.getUTCMonth() < 3 ? 1 : 0);
+      els.seasonLabel.textContent = 'Beta · ' + year + '–' + String(year + 1).slice(-2);
+    }
+  }
+
+  function renderSavebar() {
+    var btn = els.saveBtn;
+    function off(v) { if (v) btn.setAttribute('aria-disabled', 'true'); else btn.removeAttribute('aria-disabled'); }
+    els.savebar.hidden = state.view !== 'picks' || !state.me || !els.gate.hidden;
+    var w = state.week;
+    if (!w) {
+      els.saveCount.textContent = state.weekFailed ? 'Couldn’t load this week' : (state.weekKey ? 'Loading…' : 'Nothing to pick yet');
+      els.unsaved.hidden = true;
+      off(true);
+      btn.textContent = state.me ? 'Save ' + possessive(state.me) + ' picks' : 'Save picks';
+      return;
+    }
+    var c = countPicked(), dirty = isDirty();
+    els.saveCount.textContent = c.y ? c.x + ' of ' + c.y + ' games picked' : 'No games to pick';
+    els.unsaved.hidden = !dirty;
+    off(state.saving || !dirty || state.stale);
+    // "Saved" is about what is stored, not about how many games are complete: one pick or a guess is enough.
+    btn.textContent = state.saving ? 'Saving…' : ((dirty || !anyStored()) ? 'Save ' + possessive(state.me) + ' picks' : 'Saved');
+  }
+
+  // Is anything at all stored for the week on screen: a single pick, or a guess?
+  function anyStored() {
+    if (state.loaded.tbGuess !== null) return true;
+    return Object.keys(state.loaded.picks).some(function (id) { var l = state.loaded.picks[id]; return !!(l.ats || l.ml); });
+  }
+
+  // ---------------------------------------------------------------
+  // Picks: loading, saving, refreshing
+  // ---------------------------------------------------------------
+  function loadWeek() {
+    var token = ++state.reqToken, key = state.weekKey;
+    state.week = null;
+    state.weekFailed = false;
+    state.picks = {};
+    state.loaded = { picks: {}, tbGuess: null };
+    state.tbGuess = '';
+    cardMap = {}; tbRefs = null; soonEl = null;
+    if (!key) { renderNoWeeks(); renderSavebar(); return; }
+    skeleton(els.picksContent, 4, true);
+    els.weekSummary.hidden = true;
+    els.picksMeta.hidden = true;
+    renderSavebar();
+    api('api_spreadWeek', function (t) { return [key, { token: t }]; }).then(function (w) {
+      if (token !== state.reqToken) return;
+      adoptWeek(w);
+      renderWeek();
+      renderSavebar();
+      if (gamesOn(w.games)) refreshWeekQuietly();           // a game is on: fresh scores now, not in a minute
+    }).catch(function (e) {
+      if (token !== state.reqToken) return;
+      if (e && e.signedOut) return;
+      state.weekFailed = true;           // the save bar says so too, in place of "Loading…"
+      renderPicksError(e);
+      renderSavebar();
+    });
+  }
+
+  // What a save sends: only the games that changed. A changed spread pick goes with `shown` (the home spread on
+  // screen when it was tapped) and with the winner that is on screen beside it, because the two are tied by the
+  // favorite lock; a change to the winner alone sends only the winner. The guess goes only when it changed.
+  function buildSave() {
+    var picks = {}, sent = {}, n = 0;
+    (state.week.games || []).forEach(function (g) {
+      var p = pickOf(g), l = loadedOf(g), o = null;
+      if (p.ats !== l.ats) o = { ats: p.ats, ml: p.ml, shown: p.ats ? (typeof p.shown === 'number' ? p.shown : null) : null };
+      else if (p.ml !== l.ml) o = { ml: p.ml };
+      if (!o) return;
+      picks[g.eventId] = o;
+      sent[g.eventId] = { ats: p.ats, ml: p.ml };
+      n++;
+    });
+    return { picks: picks, sent: sent, n: n };
+  }
+
+  // What this phone holds of the Live board and the Scoreboard predates a save that has just gone through. Both
+  // are forgotten, so the next visit loads them afresh, and the one that is on screen now is loaded again at once.
+  function forgetBoards() {
+    state.live = null; state.liveJson = ''; state.liveToken++; state.liveLoading = false; state.liveRefreshing = false;
+    state.scoreboard = null; state.scoreboardJson = ''; state.sbToken++; state.scoreboardLoading = false;
+    if (state.view === 'live') loadLive(true); else if (state.view === 'scoreboard') loadScoreboard(true);
+  }
+
+  function save() {
+    if (!state.me) return;
+    // A dim Save still answers a tap: it says why there is nothing for it to do right now.
+    if (state.saving) { toast('Still saving.'); return; }
+    if (!state.week) { toast(state.weekFailed ? 'This week didn’t load. Tap Try again.' : (state.weekKey ? 'Still loading.' : 'There is nothing to pick yet.')); return; }
+    if (state.stale) { toast(state.staleFailed ? 'This phone couldn’t reach Spread Pick ’Em. Tap Refresh, then save.' : 'Still updating. You can save in a moment.'); return; }
+    var guess = parseGuessInput(state.tbGuess);
+    if (!guess.ok) {
+      toast('Your total points guess must be a number from 0 to 200.', 6000);
+      if (tbRefs) focusEl(tbRefs.input);
+      return;
+    }
+    var out = buildSave(), tbChanged = guess.value !== state.loaded.tbGuess;
+    if (!out.n && !tbChanged) { toast(anyStored() ? 'Nothing to save. Your picks are already saved.' : 'Nothing to save yet.'); renderSavebar(); return; }
+    var payload = { token: '', weekKey: state.weekKey, picks: out.picks };
+    if (tbChanged) payload.tbGuess = guess.value;
+    // Everything the answer needs is captured now: if another week is on screen by the time it arrives, the
+    // answer must not touch it.
+    var token = state.reqToken, label = state.week.label || ('Week ' + state.week.key), who = state.me, newcomer = state.week.joined === false;
+    state.saving = true;
+    state.saveSeq++;                 // every refresh that left before this save is now out of date
+    renderSavebar();
+    api('api_spreadSavePicks', function (t) { payload.token = t; return [payload]; }).then(function (res) {
+      state.saving = false;
+      // api() only ever hands back an answer that says ok === true: a refused save never gets here.
+      forgetBoards();
+      if (token !== state.reqToken || !state.week) { toast('Saved ' + possessive(who) + ' picks for ' + label + '.'); renderSavebar(); return; }
+      var told = '';
+      try { told = applySaveAnswer(res, out.sent, tbChanged, guess.value); }
+      catch (err) {
+        // It WAS saved. If the answer cannot be drawn, say so and load the week afresh rather than report a failure.
+        toast('Saved ' + possessive(who) + ' picks for ' + label + '.');
+        loadWeek();
+        return;
+      }
+      // "Saved" alone would read as "done": say it when an open game still holds only one of its two picks.
+      var half = halfPicked();
+      if (half.length) {
+        told += (told ? ' ' : '') + (half.length === 1 ? '1 game still needs a pick: ' + matchup(half[0])
+          : half.length + ' games still need a pick: ' + matchup(half[0]) + ' and ' + (half.length - 1) + ' more') + '.';
+      }
+      toast('Saved ' + possessive(who) + ' picks for ' + label + '.' + (told ? ' ' + told : ''), told ? 8000 : 4200);
+      renderSummary();
+      renderSavebar();
+      updateSoon();
+      // A first save is what joins the spread game, and joining grades the games that have already finished
+      // (blanks are misses). The answer brings back only the saved games, so the week is asked for again now.
+      if (newcomer) refreshWeekQuietly();
+    }, function (e) {
+      // Only a failure of the request itself lands here; nothing was stored.
+      state.saving = false;
+      renderSavebar();
+      if (e && e.signedOut) return;
+      if (e && e.refused) { toast('Not saved. Sign in again to save ' + possessive(who) + ' picks.', 7000); return; }
+      var msg = cleanMessage(e);
+      var isLock = /kicked off|locked/i.test(msg);
+      toast(isLock ? 'Not saved. ' + msg : 'Not saved: ' + msg, 8000);
+      if (isLock && token === state.reqToken) refreshWeekQuietly('retry');   // the cards catch up with the kickoff
+    });
+  }
+
+  // The save answer carries the server's own game objects for everything that was sent: the cards show at once
+  // what was stored. Returns a sentence when what was stored is not what was on screen.
+  function applySaveAnswer(res, sent, tbChanged, guessValue) {
+    var w = state.week, byId = {}, told = [];
+    (w.games || []).forEach(function (g) { byId[g.eventId] = g; });
+    (Array.isArray(res.games) ? res.games : []).forEach(function (ng) {
+      var g = byId[ng.eventId], was = sent[ng.eventId];
+      if (!g || !was) return;
+      var p = pickOf(g);
+      replaceFields(g, ng);
+      var m = mergePick(p, was, g);
+      state.picks[g.eventId] = m.pick;
+      state.loaded.picks[g.eventId] = { ats: g.ats ? String(g.ats) : '', ml: g.ml ? String(g.ml) : '' };
+      var stored = state.loaded.picks[g.eventId];
+      if (stored.ml !== was.ml && stored.ml && g.mlLocked === true && hasLine(g)) {
+        told.push(stored.ml + ' is the favorite at ' + spreadText(spreadOf(g, stored.ml)) + ', so ' + stored.ml + ' is your winner in ' + matchup(g) + '.');
+      } else if (stored.ats !== was.ats || stored.ml !== was.ml) {
+        told.push(matchup(g) + ' was stored differently. Check that card.');
+      }
+      updateCard(g);
+    });
+    Object.keys(sent).forEach(function (id) {
+      // A game the answer did not hand back: what was sent is what the server now holds.
+      if ((Array.isArray(res.games) ? res.games : []).some(function (ng) { return String(ng.eventId) === String(id); })) return;
+      state.loaded.picks[id] = { ats: sent[id].ats, ml: sent[id].ml };
+    });
+    if (tbChanged) { state.loaded.tbGuess = guessValue; w.tbGuess = guessValue; }
+    ['record', 'points', 'atsRecord', 'mlRecord', 'joined'].forEach(function (k) { if (res[k] !== undefined && res[k] !== null) w[k] = res[k]; });
+    saveCache();
+    return told.join(' ');
+  }
+
+  // Never redraw the list under someone who is typing or answering a dialog. A box that cannot be typed in (the
+  // total-points guess once its game has kicked off) is nobody typing, even when a tap has left the focus in it.
+  function busyEditing() {
+    if (dialogOpen()) return true;
+    var a = document.activeElement;
+    return !!a && a.tagName === 'INPUT' && !a.readOnly && !!els.picksContent && els.picksContent.contains(a);
+  }
+
+  // mode: 'manual' = the Refresh link was tapped (it gets an answer in words), 'retry' = after a refused save.
+  function showFreshWeek(w, mode) {
+    var json = JSON.stringify(w), manual = mode === 'manual';
+    state.weekAt = Date.now();
+    if (json === state.weekJson && !state.stale) {
+      updateSoon();                                  // time passes even when the data doesn't
+      renderPicksMeta();
+      if (manual) toast('Up to date.');
+      return;
+    }
+    var before = shapeOf(state.week), wasStale = state.stale;
+    var res = mergeWeek(w);
+    state.stale = false; state.staleFailed = false;
+    state.weekJson = json;
+    syncWeekOption(state.week);
+    saveCache();
+    if (shapeOf(state.week) !== before || !tbRefs) {
+      var y = window.pageYOffset;
+      renderWeek();
+      window.scrollTo(0, y);
+    } else {
+      (state.week.games || []).forEach(function (g) { updateCard(g); });
+      updateTbCard();
+      renderSummary();
+      renderPicksMeta();
+      updateSoon();
+    }
+    renderSavebar();
+    if (!announcePutBack(res, mode === 'retry') && manual && !wasStale) toast('Up to date.');
+  }
+
+  // The 60-second refresh of the Picks tab (no mode), the Refresh link ('manual'), the catch-up after a save
+  // that a kickoff refused ('retry'), and the first fresh answer for a week that was drawn from this phone's
+  // saved copy ('open'). It KEEPS RUNNING while there are unsaved picks and updates everything except those
+  // choices (design 10.4).
+  function refreshWeekQuietly(mode) {
+    var manual = mode === 'manual', forced = !!mode;
+    if (state.stale && mode !== 'open') { if (manual) fetchBootstrap(); return Promise.resolve(); }
+    if (state.weekRefreshing || !state.week || state.saving) return Promise.resolve();
+    if (!forced && (state.view !== 'picks' || busyEditing())) return Promise.resolve();
+    var token = state.reqToken, key = state.weekKey, saves = state.saveSeq;
+    state.weekRefreshing = true;
+    if (manual) els.refreshBtn.textContent = 'Refreshing…';
+    function settled() { state.weekRefreshing = false; els.refreshBtn.textContent = 'Refresh'; }
+    return api('api_spreadWeek', function (t) { return [key, { token: t }, true]; }, { quiet: !forced }).then(function (w) {
+      settled();
+      // Anything that happened meanwhile wins: another week loaded, a save started, someone began typing.
+      if (token !== state.reqToken || key !== state.weekKey || !state.week) return;
+      if (state.saving || busyEditing()) return;
+      // A save began after this question left, so this answer may not know about it (the server can answer a
+      // refresh with picks it read before the save). It is dropped; the next minute asks again.
+      if (saves !== state.saveSeq) return;
+      showFreshWeek(w, mode);
+    }, function (e) {
+      settled();
+      if (mode === 'open' && token === state.reqToken) { state.staleFailed = true; renderPicksMeta(); }
+      if (manual && !(e && (e.refused || e.signedOut))) toast('Couldn’t refresh: ' + cleanMessage(e), 7000);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Live board, "one call per square" (design 10.1): one row per player, one column per game, and a square is
+  // ONE call. One logo = that team all the way (the favorite to cover, or the underdog to win). Two smaller
+  // logos = the left one covers, the right one wins. A game's picks appear at its kickoff; before that a square
+  // is only a dot, full when both picks are in and empty otherwise. Once a game is graded the square adds the points.
+  // ---------------------------------------------------------------
+
+  // A pick is drawn or said only when the server has revealed BOTH the game and this player's cell (5.5).
+  function cellShown(g, cell) { return !!g && g.revealed === true && !!cell && cell.hidden === false; }
+
+  // A revealed cell as one call: the two picks, how each was graded, and the points. Points exist only once the
+  // server has graded both picks (the game is final and counted); a push or a tie arrives as 'win' for everyone.
+  function callOf(cell) {
+    var a = (cell && cell.ats) || {}, m = (cell && cell.ml) || {};
+    function res(r) { return r === 'win' ? 'ok' : (r === 'loss' ? 'bad' : ''); }
+    var c = { ats: a.pick ? String(a.pick) : '', ml: m.pick ? String(m.pick) : '', atsRes: res(a.result), mlRes: res(m.result), points: null };
+    if (c.atsRes && c.mlRes) c.points = (c.atsRes === 'ok' ? 1 : 0) + (c.mlRes === 'ok' ? 1 : 0);
+    return c;
+  }
+
+  // Before kickoff the page knows ONE thing about a player's picks on a game: are BOTH in (design 5.5)? Never a
+  // team, and nothing finer: "spread pick in, winner pick not" would give away that the spread pick is the
+  // underdog, because taking the favorite sets the winner too. So there is no half state. Returns true, false,
+  // or null when the cell does not say. A cell of a game that has not kicked off carries ONLY { hidden: true,
+  // picked }: that one flag is all this reads.
+  function bothIn(cell) {
+    if (!cell) return null;
+    if (typeof cell.picked === 'boolean') return cell.picked;
+    return null;
+  }
+  // The dot that stands for it: full = both picks are in, empty = not yet.
+  function pickDot(on) { return h('span', { class: 'dot' + (on ? ' on' : ''), 'aria-hidden': 'true' }); }
+
+  function pointsWords(n) { return n === 1 ? '1 point' : n + ' points'; }
+  // "GB plus 2.5 to cover": a spread pick in words, for labels that are read aloud.
+  function coverWords(g, team) {
+    if (!hasLine(g) || (team !== g.away && team !== g.home)) return team + ' to cover';
+    var n = spreadOf(g, team);
+    return n === 0 ? team + ' to cover a pick ’em (PK) line' : team + (n > 0 ? ' plus ' : ' minus ') + Math.abs(n) + ' to cover';
+  }
+  // One call in words: "LAR minus 2.5 to cover and to win", "GB plus 2.5 to cover, LAR to win", "no picks".
+  function callWords(g, c) {
+    if (!c.ats && !c.ml) return 'no picks';
+    if (c.ats === c.ml) return coverWords(g, c.ats) + ' and to win';
+    return (c.ats ? coverWords(g, c.ats) : 'no spread pick') + ', ' + (c.ml ? c.ml + ' to win' : 'no winner pick');
+  }
+
+  // Why a game is not in the spread game, short enough for a column head, and as a sentence of its own.
+  function leftOutShort(g) {
+    if (g.why === 'before-start') return 'Before the beta';
+    if (g.why === 'no-line') return 'No line';
+    if (g.why === 'no-score') return 'No score';
+    if (g.why === 'canceled') return 'Canceled';
+    return '';
+  }
+  function leftOutReason(g) {
+    var s = leftOutText(g).replace(/^Left out: /, '');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function matchLine(abbr, score, won) {
+    return h('span', { class: 'match-line' + (won ? ' won' : '') }, [h('span', { text: abbr }), h('strong', { text: score })]);
+  }
+
+  function liveStatusNode(g) {
+    var st = h('span', { class: 'st' });
+    if (g.status === 'live') {
+      st.appendChild(h('span', { class: 'live-flag', text: 'LIVE' }));
+      st.appendChild(document.createTextNode(' ' + gameStatusText(g)));
+    } else st.appendChild(document.createTextNode(gameStatusText(g)));
+    return st;
+  }
+
+  function liveWeekOptions(sel, current) {
+    var weeks = (state.boot && state.boot.weeks) || [];
+    clear(sel);
+    weeks.forEach(function (w) { sel.appendChild(h('option', { value: String(w.key), text: String(w.label || w.key) })); });
+    sel.value = String(current);
+  }
+
+  function openLiveGame(eventId) {
+    state.liveGameId = String(eventId);
+    state.liveView = 'games';
+    state.liveDetail = null;
+    writeStore(STORE.liveView, 'games');
+    renderLive(false);
+    focusEl(els.liveContent.querySelector('.game-option[aria-pressed=true]'));
+  }
+
+  // A column head: both teams with the score, the game's state, and the line in force. A game that is left out
+  // of the spread game says so, and why, where the state and the line would be.
+  function liveGameHead(g) {
+    var sc = scorePair(g), out = g.counted === false, line = hasLine(g), st;
+    if (out) {
+      st = h('span', { class: 'st' }, ['Left out', h('b', { text: leftOutShort(g) })]);
+    } else {
+      st = liveStatusNode(g);
+      st.appendChild(h('b', { text: line ? lineText(g) : 'No line' }));
+    }
+    return h('th', { class: 'gm ' + (out ? 'out' : g.status), scope: 'col',
+      'aria-label': teamName(g.away) + ' at ' + teamName(g.home) + ', ' + sc.join(' to ') + ', ' + gameStatusText(g) +
+        (out ? '. ' + leftOutText(g) : (line ? ', line ' + lineText(g) : '')) }, [
+      matchLine(g.away, sc[0], !out && g.winner === g.away), matchLine(g.home, sc[1], !out && g.winner === g.home), st,
+      h('button', { type: 'button', class: 'grid-game-tab', 'aria-label': 'View ' + teamName(g.away) + ' at ' + teamName(g.home) + ' in Games view',
+        onclick: function () { openLiveGame(g.eventId); } })
+    ]);
+  }
+
+  // One square: one player's call on one game. Its label says in words exactly what the square shows.
+  function liveSquare(g, cell, player) {
+    // A game that is left out of the spread game: the square is empty, whatever was picked.
+    if (g.counted === false) return h('td', { class: 'c out', 'aria-label': player + ': ' + matchup(g) + ' is not in the spread game.' });
+    if (!cellShown(g, cell)) {
+      // Before kickoff: only a dot, full when both picks are in and empty otherwise.
+      var isIn = bothIn(cell);
+      return h('td', { class: 'c', 'aria-label': player + ': ' + (isIn === true ? 'both picks are in. Hidden until kickoff.'
+          : (isIn === false ? 'picks not in yet.' : 'picks are hidden until kickoff.')) },
+        h('span', { class: 'square' }, isIn === null ? null : pickDot(isIn)));
+    }
+    var c = callOf(cell), body;
+    function slot(team) { return team ? teamLogo(team) : h('span', { class: 'none', text: '\u2014' }); }
+    if (!c.ats && !c.ml) {
+      body = slot('');                                    // no pick at all: a dash
+    } else if (c.ats === c.ml) {
+      body = teamLogo(c.ats);                             // the same team twice: one logo
+      body.className = 'logo one';
+    } else {
+      // The picks differ, or one is missing: left = the spread pick, right = the winner pick, a dash for a missing one.
+      body = h('span', { class: 'two' }, [slot(c.ats), h('i', { 'aria-hidden': 'true' }), slot(c.ml)]);
+    }
+    return h('td', { class: 'c' + (c.points === null ? '' : ' p' + c.points) }, h('button', { type: 'button', class: 'square',
+      'aria-label': player + ': ' + callWords(g, c) + '.' + (c.points === null ? '' : ' ' + pointsWords(c.points) + '.') + ' View details',
+      onclick: function (e) { showPickDetail(g.eventId, player, e.currentTarget); } },
+      [body, c.points === null ? null : h('span', { class: 'pts', text: '+' + c.points })]));
+  }
+
+  function detailPanel() { return h('section', { class: 'pick-detail', 'aria-label': 'Pick details', 'aria-live': 'polite', hidden: true }); }
+
+  function nowWord(g, kind, team) {
+    var sc = g.status === 'live' ? scoresOf(g) : null;
+    if (!sc || !team) return '';
+    var lead;
+    if (kind === 'ats') {
+      if (!hasLine(g)) return '';
+      var m = sc[1] + g.line.home - sc[0];
+      lead = team === g.home ? m : -m;
+      return lead > 0 ? 'Covering right now' : (lead < 0 ? 'Not covering right now' : 'On the line right now');
+    }
+    lead = team === g.home ? sc[1] - sc[0] : sc[0] - sc[1];
+    return lead > 0 ? 'Ahead right now' : (lead < 0 ? 'Behind right now' : 'Tied right now');
+  }
+
+  function showPickDetail(eventId, player, origin) {
+    var board = state.live || {}, g = null, row = null;
+    (board.games || []).forEach(function (x) { if (String(x.eventId) === String(eventId)) g = x; });
+    (board.rows || []).forEach(function (x) { if (x.player === player) row = x; });
+    var cell = row && row.cells && row.cells[eventId];
+    if (!g || g.counted === false || !cellShown(g, cell)) return;
+    var panel = els.liveContent.querySelector('.pick-detail');
+    if (!panel) return;
+    state.liveDetail = { eventId: String(eventId), player: player };
+    clear(panel);
+    panel.hidden = false;
+    var close = h('button', { type: 'button', class: 'link-btn', text: 'Close', 'aria-label': 'Close pick details', onclick: function () {
+      state.liveDetail = null;
+      panel.hidden = true;
+      if (origin && origin.isConnected) focusEl(origin);
+    } });
+    panel.appendChild(h('div', { class: 'detail-top' }, [h('h3', { text: possessive(player) + ' picks' }), close]));
+    var sc = scorePair(g);
+    [g.away, g.home].forEach(function (t, i) {
+      panel.appendChild(h('div', { class: 'detail-team' }, [teamLogo(t),
+        h('span', null, [teamName(t), h('small', { text: g.neutral ? 'Neutral site' : (i === 0 ? 'Away' : 'Home') })]), h('span', { class: 'big', text: sc[i] })]));
+    });
+    // Both picks in words, whether each was right, and the points. A push gives the spread point to everyone and
+    // a tie game gives the winner point to everyone, a blank pick included, so those say so instead of "Right".
+    var c = callOf(cell);
+    [['ats', 'Spread'], ['ml', 'Winner']].forEach(function (k) {
+      var pick = c[k[0]], res = c[k[0] + 'Res'];
+      var what = !pick ? 'No pick' : (k[0] === 'ats' && hasLine(g) ? pick + ' ' + spreadText(spreadOf(g, pick)) : pick);
+      var forAll = k[0] === 'ats' ? (g.cover === 'PUSH' ? 'Push: everyone gets the point' : '') : (g.winner === 'TIE' ? 'Tie game: everyone gets the point' : '');
+      var how = res === 'ok' ? (forAll || 'Right') : (res === 'bad' ? (pick ? 'Wrong' : 'Counts as a miss') : nowWord(g, k[0], pick));
+      panel.appendChild(h('div', { class: 'detail-pick' + (res ? ' ' + res : '') }, [
+        h('span', { class: 'k', text: k[1] }), h('strong', { text: what }),
+        how ? h('span', { class: 'r' }, [res ? mark(res) : null, how]) : null
+      ]));
+    });
+    if (c.points !== null) {
+      panel.appendChild(h('div', { class: 'detail-points p' + c.points }, [
+        h('span', { class: 'pts', 'aria-hidden': 'true', text: '+' + c.points }),
+        h('span', { text: player + ' earned ' + pointsWords(c.points) + ' on this game.' })
+      ]));
+    }
+    panel.appendChild(h('div', { class: 'detail-state', text: (g.status === 'live' ? 'LIVE · ' : '') + gameStatusText(g) + (hasLine(g) ? ' · Line ' + lineText(g) : '') }));
+    if (origin) {
+      try { panel.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ }
+      focusEl(close);
+    }
+  }
+
+  // ---- Games view: one matchup at a time, the players' NAMES grouped by call (first version, not yet agreed) ----
+
+  // The calls a game allows, in the order they are always listed. With a favorite there are three: the favorite
+  // to cover (its winner pick is locked to the favorite, R2), the underdog to cover with the favorite to win,
+  // and the underdog to win outright. With no favorite (a spread of 0) the winner pick is free on both sides, so
+  // every pair of picks is a call.
+  function callGroups(g) {
+    var fav = favoriteOf(g);
+    function cover(t) { return t + ' to cover' + (hasLine(g) ? ' ' + spreadText(spreadOf(g, t)) : ''); }
+    if (fav) {
+      var dog = otherTeam(g, fav);
+      return [
+        { ats: fav, ml: fav, title: cover(fav), said: coverWords(g, fav) },
+        { ats: dog, ml: fav, title: cover(dog) + ', ' + fav + ' to win', said: coverWords(g, dog) + ', ' + fav + ' to win' },
+        { ats: dog, ml: dog, title: dog + ' to win outright', said: dog + ' to win outright' }
+      ];
+    }
+    var list = [];
+    [g.away, g.home].forEach(function (a) {
+      var b = otherTeam(g, a);
+      list.push({ ats: a, ml: a, title: cover(a) + ' and win', said: coverWords(g, a) + ' and to win' });
+      list.push({ ats: a, ml: b, title: cover(a) + ', ' + b + ' to win', said: coverWords(g, a) + ', ' + b + ' to win' });
+    });
+    return list;
+  }
+
+  // The points a call earns once its game is graded, by the server's own two rules: the spread point for the
+  // team that covered (for everyone on a push), the winner point for the winner (for everyone on a tie game).
+  function gameGraded(g) { return g.status === 'final' && g.counted !== false && !!g.cover && !!g.winner; }
+  function callPoints(g, ats, ml) {
+    return ((g.cover === 'PUSH' || (!!ats && ats === g.cover)) ? 1 : 0) + ((g.winner === 'TIE' || (!!ml && ml === g.winner)) ? 1 : 0);
+  }
+
+  // "Both picks in: Ann, Ben."
+  function whoLine(label, names) {
+    return names.length ? h('div', { class: 'who-line' }, [h('strong', { text: label + ': ' }), names.join(', ') + '.']) : null;
+  }
+
+  // Everything under the score of the chosen game: the calls with the names on each, then the players who made
+  // only one of the two picks, then the players who made none. Before kickoff: only who has picked, never what.
+  function renderCalls(focused, g, rows) {
+    var groups = g.revealed === true ? callGroups(g) : [], fav = favoriteOf(g), graded = gameGraded(g);
+    var members = groups.map(function () { return []; });
+    var atsOnly = [], mlOnly = [], none = [], waiting = { yes: [], no: [], unknown: [] };      // not revealed: are both picks in?
+    rows.forEach(function (r) {
+      var cell = r.cells && r.cells[g.eventId];
+      if (!cellShown(g, cell)) { var isIn = bothIn(cell); waiting[isIn === true ? 'yes' : (isIn === false ? 'no' : 'unknown')].push(r.player); return; }
+      var c = callOf(cell);
+      if (!c.ats && !c.ml) { none.push(r.player); return; }
+      if (!c.ml) { atsOnly.push(r.player + ' (' + c.ats + (hasLine(g) ? ' ' + spreadText(spreadOf(g, c.ats)) : '') + ')'); return; }
+      if (!c.ats) { mlOnly.push(r.player + ' (' + c.ml + ')'); return; }
+      var at = -1;
+      groups.forEach(function (grp, i) {
+        // Taking the favorite locks the winner pick to it, so the favorite's spread pick alone names that call.
+        if (at < 0 && grp.ats === c.ats && (grp.ml === c.ml || (!!fav && c.ats === fav))) at = i;
+      });
+      if (at < 0) {
+        // A pair the rules do not expect (a pick that is neither team): shown as it is, never dropped.
+        var words = c.ats === c.ml ? c.ats + ' to cover and win' : c.ats + ' to cover, ' + c.ml + ' to win';
+        groups.push({ ats: c.ats, ml: c.ml, title: words, said: words });
+        members.push([]);
+        at = groups.length - 1;
+      }
+      members[at].push(r);
+    });
+    if (g.revealed !== true) {
+      focused.appendChild(noticeCard('Picks appear at kickoff', hasLine(g) ? 'The line right now is ' + lineText(g) + '.' : 'There is no line yet.'));
+    }
+    groups.forEach(function (grp, i) {
+      var pts = graded ? callPoints(g, grp.ats, grp.ml) : null, list = members[i];
+      var group = h('section', { class: 'call' + (pts === null ? '' : ' p' + pts),
+        'aria-label': grp.said + '.' + (pts === null ? '' : ' ' + pointsWords(pts) + '.') + ' ' + (list.length === 1 ? '1 player' : list.length + ' players') },
+        h('div', { class: 'call-heading' }, [h('h3', { text: grp.title }), pts === null ? null : h('span', { class: 'pts', 'aria-hidden': 'true', text: '+' + pts })]));
+      list.forEach(function (r) {
+        group.appendChild(h('button', { type: 'button', class: 'person-pick' + (r.player === state.me ? ' me' : ''), text: r.player,
+          'aria-label': possessive(r.player) + ' picks. View details', onclick: function (e) { showPickDetail(g.eventId, r.player, e.currentTarget); } }));
+      });
+      if (!list.length) group.appendChild(h('div', { class: 'no-picks', text: 'No one' }));
+      focused.appendChild(group);
+    });
+    var lines = [
+      whoLine('Spread pick only', atsOnly), whoLine('Winner pick only', mlOnly), whoLine('No picks', none),
+      whoLine('Both picks in', waiting.yes), whoLine('Not yet', waiting.no), whoLine('Hidden until kickoff', waiting.unknown)
+    ].filter(Boolean);
+    if (lines.length) focused.appendChild(h('div', { class: 'who-lines' }, lines));
+    if (members.some(function (list) { return list.length > 0; })) {
+      focused.appendChild(h('div', { class: 'focus-footnote', text: 'Tap a player for both of their picks.' }));
+    }
+  }
+
+  function renderLiveGames(section, games, rows, oldScroll) {
+    var g = null;
+    games.forEach(function (x) { if (String(x.eventId) === state.liveGameId) g = x; });
+    if (!g) {
+      // Nothing chosen yet: the game that is on, else the next one, among the games that are in the spread game.
+      var counted = games.filter(function (x) { return x.counted !== false; });
+      g = counted.filter(function (x) { return x.status === 'live'; })[0] ||
+          counted.filter(function (x) { return x.status !== 'final' && x.status !== 'canceled'; })[0] || counted[0] || games[0];
+      state.liveGameId = String(g.eventId);
+    }
+    var rail = h('div', { class: 'game-rail', role: 'group', 'aria-label': 'Choose a matchup' });
+    games.forEach(function (x) {
+      var sc = scorePair(x), out = x.counted === false;
+      rail.appendChild(h('button', { type: 'button', class: 'game-option', 'data-game': String(x.eventId),
+        'aria-pressed': String(String(x.eventId) === state.liveGameId), 'aria-label': x.away + ' at ' + x.home + ', ' + gameStatusText(x) + (out ? ', left out' : ''),
+        onclick: function () {
+          state.liveGameId = String(x.eventId);
+          state.liveDetail = null;
+          renderLive(false);
+          focusEl(els.liveContent.querySelector('.game-option[aria-pressed=true]'));
+        } }, [matchLine(x.away, sc[0], false), matchLine(x.home, sc[1], false), out ? h('span', { class: 'st', text: 'Left out' }) : liveStatusNode(x)]));
+    });
+    section.appendChild(rail);
+    if (oldScroll !== null) rail.scrollLeft = oldScroll;
+    var selected = rail.querySelector('.game-option[aria-pressed=true]');
+    if (selected) {
+      try {
+        var r = rail.getBoundingClientRect(), s = selected.getBoundingClientRect();
+        if (s.left < r.left || s.right > r.right) rail.scrollLeft += s.left - r.left - (rail.clientWidth - selected.offsetWidth) / 2;
+      } catch (e) { /* ignore */ }
+    }
+    var focused = h('section', { class: 'focused-game', 'aria-label': 'Selected matchup' });
+    section.appendChild(focused);
+    focused.appendChild(h('div', { class: 'focused-status' }, [
+      g.status === 'live' ? h('span', { class: 'live-flag', text: 'LIVE' }) : null,
+      h('span', { text: (g.status === 'scheduled' || !g.status ? kickoffBlock(g) : gameStatusText(g)) + (g.network ? ' · ' + g.network : '') })
+    ]));
+    var sc2 = scorePair(g);
+    focused.appendChild(h('div', { class: 'focus-score' }, [g.away, g.home].map(function (t, i) {
+      return h('div', { class: 'focus-team' }, [teamLogo(t),
+        h('span', null, [h('strong', { text: teamNickname(t) }), h('small', { text: (g.neutral ? 'Neutral' : (i === 0 ? 'Away' : 'Home')) + ' · ' + t })]),
+        h('span', { class: 'big', text: sc2[i] })]);
+    })));
+    if (g.counted === false) {
+      // Left out of the spread game: the reason, and nobody's picks.
+      focused.appendChild(noticeCard('Not in the spread game', leftOutReason(g)));
+      return;
+    }
+    // A graded game says what happened in one sentence, as its card on the Picks tab does: it is what explains
+    // the points on each call (a push or a tie game gives a point to everyone).
+    var sentence = gameGraded(g) ? resultSentence(g) : '';
+    if (sentence) focused.appendChild(h('p', { class: 'note result', text: sentence }));
+    focused.appendChild(detailPanel());
+    renderCalls(focused, g, rows);
+  }
+
+  function tiebreakerSummary(tb) {
+    var parts = [tb.label || 'Tiebreaker game'];
+    if (numOrNull(tb.actual) !== null) parts.push('Final total: ' + tb.actual);
+    if (numOrNull(tb.overUnder) !== null) parts.push('Over/under ' + tb.overUnder);
+    return parts.join(' · ');
+  }
+
+  // Guesses appear with the tiebreaker game's kickoff, never before.
+  function renderTiebreaker(tb, rows) {
+    if (!tb || tb.revealed !== true) return null;
+    var section = sectionTable('Total points', ['Player', 'Guess'], rows.map(function (r) { return [r.player, r.tbGuess]; }), {
+      numCols: [1], meCol: 0, sticky: false, subtitle: tiebreakerSummary(tb)
+    });
+    section.className = 'tiebreaker-board';
+    return section;
+  }
+
+  function refreshMeta(iso, onRefresh) {
+    var at = stampText(iso);
+    return h('div', { class: 'refresh-meta' }, [
+      h('span', { text: 'Updates every minute' + (at ? ' · ' + at : '') }),
+      h('button', { type: 'button', class: 'link-btn', text: 'Refresh', onclick: onRefresh })
+    ]);
+  }
+
+  // `fresh` = a newly loaded week: scroll the grid to the first game that isn't over yet.
+  function renderLive(fresh) {
+    var b = state.live || {}, c = els.liveContent;
+    var oldGrid = c.querySelector('.grid-wrap'), oldRail = c.querySelector('.game-rail');
+    if (oldGrid) state.liveGridScroll = oldGrid.scrollLeft;
+    var oldScroll = state.liveGridScroll, railScroll = oldRail ? oldRail.scrollLeft : null;
+    clear(c);
+    var sel = h('select', { 'aria-label': 'Week' });
+    liveWeekOptions(sel, state.weekKey);
+    sel.addEventListener('change', function () { chooseWeek(sel.value); });
+    var toggle = h('div', { class: 'live-switch', role: 'group', 'aria-label': 'Live view' });
+    ['grid', 'games'].forEach(function (v) {
+      toggle.appendChild(h('button', { type: 'button', 'data-live-view': v, 'aria-pressed': String(state.liveView === v), text: v === 'grid' ? 'Grid' : 'Games',
+        onclick: function () {
+          state.liveView = v;
+          state.liveDetail = null;
+          writeStore(STORE.liveView, v);
+          renderLive(false);
+          focusEl(c.querySelector('[data-live-view="' + v + '"]'));
+        } }));
+    });
+    c.appendChild(h('div', { class: 'live-toolbar' }, [
+      h('div', { class: 'live-controls' }, [h('span', { class: 'select-wrap' }, [sel, mark('chev')]), toggle]),
+      refreshMeta(b.lastUpdated, function () { loadLive(true); })
+    ]));
+    var all = Array.isArray(b.games) ? b.games : [], rows = Array.isArray(b.rows) ? b.rows : [];
+    var games = all.filter(function (g) { return g.counted !== false; });
+    var leftOut = all.filter(function (g) { return g.counted === false; });
+    var liveCount = games.filter(function (g) { return g.status === 'live'; }).length;
+    var section = h('section', null, h('div', { class: 'board-heading' }, [
+      h('h2', { text: state.liveView === 'games' ? 'Game by game' : 'All picks and results' }),
+      h('span', { class: 'status-line', text: dash(b.gamesFinal) + ' of ' + dash(b.gamesTotal) + ' final' + (liveCount ? ' · ' + liveCount + ' live' : '') })
+    ]));
+    c.appendChild(section);
+    if (!games.length) {
+      section.appendChild(noticeCard('No games yet', all.length ? 'No game of ' + (b.label || 'this week') + ' is in the spread game.' : 'The schedule for ' + (b.label || 'this week') + ' hasn’t been set.'));
+    } else if (!rows.length) {
+      section.appendChild(noticeCard('Nobody has picked yet', 'A player appears here after their first save.'));
+    } else if (state.liveView === 'games') {
+      renderLiveGames(section, all, rows, railScroll);
+    } else {
+      // Every game of the week is a column, as on the family page. A game that is left out of the spread game
+      // keeps its column: its head says why and its squares are empty (design 10.1).
+      section.appendChild(detailPanel());
+      section.appendChild(h('div', { class: 'mobile-hint', text: 'Swipe for more games →' }));
+      var thead = h('thead', null, h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' })].concat(all.map(liveGameHead))));
+      var tbody = h('tbody');
+      rows.forEach(function (r) {
+        var picked = numOrNull(r.picked), pickable = numOrNull(r.pickable);
+        tbody.appendChild(h('tr', null, [h('td', { class: 'pl' + (r.player === state.me ? ' me' : '') }, [
+          h('span', { class: 'nm', text: r.player }),
+          /\d/.test(String(r.record || '')) ? h('span', { class: 'rc', text: recordText(r.record) }) : null,
+          (picked !== null && pickable !== null) ? h('span', { class: 'pc', text: picked + '/' + pickable + ' picked', 'aria-label': picked + ' of ' + pickable + ' games picked' }) : null
+        ])].concat(all.map(function (g) { return liveSquare(g, r.cells && r.cells[g.eventId], r.player); }))));
+      });
+      var table = h('table', { class: 'grid', 'aria-label': (b.label || 'Weekly') + ' picks and results' }, [thead, tbody]);
+      table.style.setProperty('--game-count', String(all.length));
+      var wrap = h('div', { class: 'grid-wrap' }, table);
+      section.appendChild(wrap);
+      section.appendChild(h('div', { class: 'grid-key' }, [
+        h('span', null, [h('b', { text: 'One logo' }), ' that team all the way']),
+        h('span', null, [h('b', { text: 'Two logos' }), ' left covers, right wins']),
+        h('span', null, [h('b', { text: '+2' }), ' both right']),
+        h('span', null, [h('b', { text: '+1' }), ' one right']),
+        h('span', null, [h('b', { text: '+0' }), ' neither']),
+        h('span', null, [h('b', { text: '\u2014' }), ' no pick']),
+        h('span', null, [pickDot(true), ' both picks in, hidden']),
+        h('span', null, [pickDot(false), ' not in yet']),
+        h('span', { text: 'Tap a matchup for the game, a square for details.' })
+      ]));
+      wrap.scrollLeft = oldScroll;
+      if (fresh) {
+        var idx = -1;
+        all.forEach(function (g, i) { if (idx < 0 && g.counted !== false && g.status !== 'final' && g.status !== 'canceled') idx = i; });
+        if (idx > 0) {
+          var heads = table.querySelectorAll('th.gm');
+          if (heads[idx]) wrap.scrollLeft = heads[idx].offsetLeft - heads[0].offsetLeft;
+        }
+      }
+    }
+    if (leftOut.length) {
+      c.appendChild(h('p', { class: 'left-out-list', text: 'Not in the spread game this week: ' +
+        leftOut.map(function (g) { return matchup(g) + ' (' + leftOutText(g).replace(/^Left out: /, '').replace(/\.$/, '') + ')'; }).join('; ') + '.' }));
+    }
+    var totals = renderTiebreaker(b.tb, rows);
+    if (totals) c.appendChild(totals);
+    if (state.liveDetail) showPickDetail(state.liveDetail.eventId, state.liveDetail.player, null);
+  }
+
+  function loadLive(force) {
+    if (state.liveLoading) return;
+    var key = state.weekKey;
+    if (state.live && !force && String(state.live.key) === String(key)) {
+      renderLive(false);
+      if (Date.now() - state.liveAt >= AUTO_REFRESH_MS) refreshLiveQuietly();
+      return;
+    }
+    if (!key && state.boot && !(state.boot.weeks || []).length) {
+      clear(els.liveContent);
+      els.liveContent.appendChild(noticeCard('No games yet', state.boot.open === false ? 'Spread Pick ’Em hasn’t started.' : 'There are no games in the spread game right now.'));
+      return;
+    }
+    var token = ++state.liveToken;
+    state.liveLoading = true;
+    skeleton(els.liveContent, 8, false);
+    // This load holds liveLoading until it settles, unless a newer load or a week change (both bump liveToken)
+    // has taken the flag over. @return {boolean} use the answer?
+    function settled() {
+      if (token !== state.liveToken) return false;
+      state.liveLoading = false;
+      if (key === state.weekKey) return true;
+      if (state.view === 'live') loadLive(true);          // answered for another week: load the selected one
+      return false;
+    }
+    api('api_spreadLive', function (t) { return [key, { token: t }]; }).then(function (b) {
+      if (!settled()) return;
+      state.live = b;
+      state.liveAt = Date.now();
+      state.liveJson = JSON.stringify(b);
+      if (state.view === 'live') renderLive(true);
+      if (gamesOn(b.games)) refreshLiveQuietly();           // a game is on: fresh scores now, not in a minute
+    }).catch(function (e) {
+      if (!settled()) return;
+      if (e && e.signedOut) return;
+      clear(els.liveContent);
+      els.liveContent.appendChild(noticeCard('Couldn’t load the live board', cleanMessage(e), 'Try again', function () { loadLive(true); }));
+    });
+  }
+
+  function refreshLiveQuietly() {
+    if (state.liveRefreshing || state.liveLoading || !state.live || String(state.live.key) !== state.weekKey) return Promise.resolve();
+    var token = state.liveToken, key = state.live.key;
+    // The flag is this one request and comes down when THIS request settles, wanted or not. It holds the
+    // request, not just true, because a week change takes it down early: the abandoned request must not then
+    // take down the flag of the refresh that followed it.
+    var mine = state.liveRefreshing = {};
+    function settled() { if (state.liveRefreshing === mine) state.liveRefreshing = false; }
+    return api('api_spreadLive', function (t) { return [key, { token: t }, true]; }, { quiet: true }).then(function (b) {
+      settled();
+      if (token !== state.liveToken || String(key) !== state.weekKey || state.liveLoading) return;
+      var json = JSON.stringify(b);
+      state.liveAt = Date.now();
+      if (json === state.liveJson) return;
+      state.live = b;
+      state.liveJson = json;
+      if (state.view !== 'live' || dialogOpen()) return;
+      var y = window.pageYOffset;
+      renderLive(false);
+      window.scrollTo(0, y);
+    }, function () {
+      settled();
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Scoreboard
+  // ---------------------------------------------------------------
+  function sectionTable(title, headers, rows, opts) {
+    opts = opts || {};
+    var numCols = opts.numCols || [];
+    var thead = h('thead', null, h('tr', null, headers.map(function (text, i) {
+      var cls = [];
+      if (numCols.indexOf(i) >= 0) cls.push('num');
+      if (opts.sticky !== false && i === 0) cls.push('sticky', 'sticky-1');
+      if (opts.sticky !== false && i === 1) cls.push('sticky', 'sticky-2');
+      return h('th', { class: cls.join(' ') || null, scope: 'col', text: text });
+    })));
     var tbody = h('tbody');
-    PLAYERS.forEach(function (p) {
-      var tr = h('tr', null, [plCell(p)]);
-      GAMES.forEach(function (g) {
-        var s = p.picks[g.id][0], w = p.picks[g.id][1];
-        if (g.state === 'open') { tr.appendChild(h('td', { class: 'c' }, [h('div', null, [h('span', { class: 'dot' + (s && w ? ' on' : (s || w ? ' half' : '')) })])])); return; }
-        var pts = g.state === 'final' ? (res(g, 0, s) === 'ok' ? 1 : 0) + (res(g, 1, w) === 'ok' ? 1 : 0) : null;
-        var body = (s && w && s !== w) ? h('span', { class: 'two' }, [logo(s), h('i'), logo(w)]) : (s || w ? logo(s || w, 'one') : h('span', { class: 'none', text: '—' }));
-        tr.appendChild(h('td', { class: 'c' + (pts !== null ? ' p' + pts : '') }, [h('div', null, [body, pts !== null ? h('span', { class: 'pts', text: '+' + pts }) : null])]));
+    rows.forEach(function (r) {
+      var isMe = opts.meCol !== undefined && !!state.me && String(r[opts.meCol]) === state.me;
+      var tr = h('tr', { class: isMe ? 'me' : null });
+      r.forEach(function (cell, i) {
+        var cls = [];
+        if (numCols.indexOf(i) >= 0) cls.push('num');
+        if (opts.sticky !== false && i === 0) cls.push('sticky', 'sticky-1');
+        if (opts.sticky !== false && i === 1) cls.push('sticky', 'sticky-2');
+        if (opts.cellClass) { var extra = opts.cellClass(i, cell, r); if (extra) cls.push(extra); }
+        var blank = cell === '' || cell === null || cell === undefined;
+        tr.appendChild(h('td', { class: cls.join(' ') || null, text: (blank && (opts.rawCols || []).indexOf(i) >= 0) ? '' : dash(cell) }));
       });
       tbody.appendChild(tr);
     });
-    document.getElementById('q').appendChild(h('table', { class: 'q' }, [thead, tbody]));
-  })();
+    var table = h('table', { class: headers[0] === '#' ? 'ranked' : null }, [thead, tbody]);
+    var section = h('section', null, [
+      h('div', { class: 'section-head' }, [h('h2', { text: title }), opts.subtitle ? h('div', { class: 'status-line', text: opts.subtitle }) : null]),
+      h('div', { class: 'table-wrap' }, table)
+    ]);
+    // The second sticky column must start exactly where the first one ends, so measure it once it is drawn.
+    if (opts.sticky !== false) {
+      setTimeout(function () {
+        var first = table.querySelector('th.sticky-1');
+        if (!first || !first.isConnected) return;
+        var left = Math.round(first.getBoundingClientRect().width) + 'px';
+        Array.prototype.forEach.call(table.querySelectorAll('.sticky-2'), function (cell) { cell.style.left = left; });
+      }, 0);
+    }
+    return section;
+  }
 
-  // ---- Option A: two thin rows per player ----
-  (function () {
-    var thead = h('thead', null, [h('tr', null, [h('th', { class: 'pl', scope: 'col', text: 'Player' }), h('th', { class: 'kind', scope: 'col' })].concat(GAMES.map(head)))]);
-    var tbody = h('tbody');
-    PLAYERS.forEach(function (p) {
-      [0, 1].forEach(function (which) {
-        var tr = h('tr', { class: which === 0 ? 's' : 'w' });
-        if (which === 0) tr.appendChild(plCell(p, 2));
-        tr.appendChild(h('td', { class: 'kind ' + (which === 0 ? 's' : 'w'), text: which === 0 ? 'S' : 'W' }));
-        GAMES.forEach(function (g) {
-          var v = p.picks[g.id][which], r = res(g, which, v), td = h('td', { class: 'c' + (r ? ' ' + r : '') });
-          if (g.state === 'open') td.appendChild(h('span', { class: 'dot' + (v ? ' on' : '') }));
-          else if (!v) td.appendChild(h('span', { class: 'none', text: '—' }));
-          else { td.appendChild(logo(v)); if (r) td.appendChild(mark(r === 'ok')); }
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
+  function thisWeekLine(tw) {
+    if (tw.status === 'final') {
+      var winners = Array.isArray(tw.winners) ? tw.winners : [];
+      return 'Final · ' + (winners.length ? 'Winner: ' + winners.join(', ') : 'No winner') + (tw.note ? ' (' + tw.note + ')' : '');
+    }
+    return dash(tw.gamesFinal) + ' of ' + dash(tw.gamesTotal) + ' final';
+  }
+
+  function renderScoreboard() {
+    var sb = state.scoreboard || {}, c = els.scoreboardContent;
+    clear(c);
+    c.appendChild(h('div', { class: 'board-meta' }, [h('h2', { text: 'Scoreboard' }), refreshMeta(sb.lastUpdated, function () { loadScoreboard(true); })]));
+    var tw = sb.thisWeek;
+    if (tw && typeof tw === 'object') {
+      var rows = Array.isArray(tw.rows) ? tw.rows : [];
+      if (!(Number(tw.gamesFinal) > 0)) {
+        // No tables of dashes: before the first result, one line and who has picked how many games.
+        var kick = validDate(tw.firstKickoff);
+        var block = h('section', null, [
+          h('div', { class: 'sb-h' }, [h('h2', { text: tw.label || 'This week' }),
+            h('span', { text: (tw.status === 'upcoming' && kick) ? 'First kickoff ' + fmt(kick, { weekday: 'short' }) + ' ' + timeText(kick) : dash(tw.gamesFinal) + ' of ' + dash(tw.gamesTotal) + ' final' })]),
+          h('div', { class: 'banner' }, [h('strong', { text: 'No games are final yet' }), h('small', { text: 'Standings appear with the first result.' })])
+        ]);
+        if (rows.length) {
+          block.appendChild(h('div', { class: 'picked-title', text: 'Games picked so far' }));
+          block.appendChild(h('div', { class: 'picked' }, rows.map(function (r) {
+            var all = Number(r.pickable) > 0 && Number(r.picked) >= Number(r.pickable);
+            return h('div', { class: (all ? 'all' : '') + (r.player === state.me ? ' me' : '') || null }, [String(r.player), h('span', { text: dash(r.picked) + ' of ' + dash(r.pickable) })]);
+          })));
+        }
+        c.appendChild(block);
+      } else {
+        var showTotals = tw.tbRevealed === true;
+        var headers = ['#', 'Player', 'Record', 'Spread', 'Winner'].concat(showTotals ? ['Guess'] : []).concat(['Status']);
+        var statusCol = headers.length - 1;
+        c.appendChild(sectionTable(tw.label || 'This week', headers, rows.map(function (r) {
+          return [r.rank, r.player, recordText(r.record), recordText(r.atsRecord), recordText(r.mlRecord)].concat(showTotals ? [r.tbGuess] : []).concat([statusWord(r.status)]);
+        }), {
+          numCols: showTotals ? [0, 5] : [0], rawCols: [statusCol], meCol: 1,
+          subtitle: thisWeekLine(tw) + (showTotals ? ' · ' + tiebreakerSummary({ label: tw.tbLabel, actual: tw.tbActual }) : ''),
+          cellClass: function (i, cell) { return i !== statusCol ? '' : (cell === 'Out' ? 'st-out' : (cell === 'Leader' ? 'st-leader' : (cell === 'Winner' ? 'st-winner' : ''))); }
+        }));
+      }
+    }
+    var p1 = Array.isArray(sb.prize1) ? sb.prize1 : [], p2 = Array.isArray(sb.prize2) ? sb.prize2 : [];
+    var anyResult = p1.concat(p2).some(function (r) { return Number(r.totalCorrect) + Number(r.totalWrong) > 0; });
+    if (!anyResult) {
+      c.appendChild(h('section', null, [h('h2', { text: 'Season' }), h('div', { class: 'status-line', text: 'Season standings start with the first final game.' })]));
+    } else {
+      var season = h('div', { class: 'standings-grid' });
+      // No tables of dashes: until a week is complete nobody has won one, so this table would be every player
+      // ranked 1 with 0 weeks and a dash. It keeps its heading, with one line, and becomes a table when a week ends.
+      var weekDone = Array.isArray(sb.weeklyWinners) && sb.weeklyWinners.length > 0;
+      var t1 = !weekDone
+        ? h('section', null, h('div', { class: 'section-head' }, [h('h2', { text: 'Most weeks won' }), h('div', { class: 'status-line', text: 'Starts when the first week is complete.' })]))
+        : sectionTable('Most weeks won', ['#', 'Player', 'Weeks', 'Best week'], p1.map(function (r) { return [r.rankWeeks, r.player, r.weeksWon, recordText(r.bestWeek)]; }), { numCols: [0, 2, 3], meCol: 1 });
+      var t2 = sectionTable('Most points', ['#', 'Player', 'Points', 'Spread', 'Winner'], p2.map(function (r) {
+        return [r.rankCorrect, r.player, r.totalCorrect, recordText(r.atsRecord), recordText(r.mlRecord)];
+      }), { numCols: [0, 2], meCol: 1 });
+      [t1, t2].forEach(function (t) { t.querySelector('.section-head').className = 'section-head standings-heading'; season.appendChild(t); });
+      c.appendChild(season);
+    }
+    var winners = h('section', { class: 'week-winners' }, h('h2', { text: 'Weekly winners' })), list = h('div', { class: 'winner-list' });
+    (Array.isArray(sb.weeklyWinners) ? sb.weeklyWinners : []).forEach(function (w) {
+      var names = Array.isArray(w.winners) ? w.winners.join(', ') : w.winners;
+      var note = w.decidedBy && w.decidedBy !== 'outright' && w.decidedBy !== 'none' ? w.decidedBy : '';
+      list.appendChild(h('div', { class: 'winner-item' }, [h('small', { text: w.label || 'Week ' + w.key }), h('strong', { text: names || 'No winner' }),
+        h('span', { class: 'record', text: recordText(w.record) }), note ? h('small', { text: String(note) }) : null]));
     });
-    document.getElementById('a').appendChild(h('table', { class: 'a' }, [thead, tbody]));
-  })();
+    if (!list.childNodes.length) list.appendChild(h('span', { class: 'status-line', text: 'No completed weeks yet.' }));
+    winners.appendChild(list);
+    c.appendChild(winners);
+  }
+
+  function loadScoreboard(force) {
+    if (state.scoreboardLoading) return;
+    if (state.scoreboard && !force) {
+      renderScoreboard();
+      if (Date.now() - state.scoreboardAt >= AUTO_REFRESH_MS) refreshScoreboardQuietly();
+      return;
+    }
+    var token = ++state.sbToken;     // a quiet refresh already in flight must not land on top of this load
+    state.scoreboardLoading = true;
+    skeleton(els.scoreboardContent, 6, false);
+    api('api_spreadScoreboard', function (t) { return [{ token: t }]; }).then(function (sb) {
+      if (token !== state.sbToken) return;
+      state.scoreboardLoading = false;
+      state.scoreboard = sb;
+      state.scoreboardAt = Date.now();
+      state.scoreboardJson = JSON.stringify(sb);
+      renderScoreboard();
+    }).catch(function (e) {
+      if (token !== state.sbToken) return;
+      state.scoreboardLoading = false;
+      if (e && e.signedOut) return;
+      clear(els.scoreboardContent);
+      els.scoreboardContent.appendChild(noticeCard('Couldn’t load the scoreboard', cleanMessage(e), 'Try again', function () { loadScoreboard(true); }));
+    });
+  }
+
+  function refreshScoreboardQuietly() {
+    if (state.sbRefreshing || state.scoreboardLoading || !state.scoreboard) return Promise.resolve();
+    var token = state.sbToken;
+    state.sbRefreshing = true;
+    return api('api_spreadScoreboard', function (t) { return [{ token: t }, true]; }, { quiet: true }).then(function (sb) {
+      state.sbRefreshing = false;
+      if (token !== state.sbToken || state.scoreboardLoading) return;
+      var json = JSON.stringify(sb);
+      state.scoreboardAt = Date.now();
+      if (json === state.scoreboardJson) return;
+      state.scoreboard = sb;
+      state.scoreboardJson = json;
+      if (state.view !== 'scoreboard' || dialogOpen()) return;   // drawn from state.scoreboard when the tab is next opened
+      var y = window.pageYOffset;
+      renderScoreboard();
+      window.scrollTo(0, y);
+    }, function () {
+      state.sbRefreshing = false;
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Auto refresh: every 60 s while the page is on screen, quietly reload the view that is showing.
+  // ---------------------------------------------------------------
+  function scheduleAutoRefresh() {
+    clearTimeout(autoTimer);
+    autoTimer = document.hidden ? null : setTimeout(autoRefresh, AUTO_REFRESH_MS);
+  }
+
+  function autoRefresh() {
+    autoTimer = null;
+    if (document.hidden) return;              // resumes on visibilitychange
+    refreshVisible().then(scheduleAutoRefresh, scheduleAutoRefresh);
+  }
+
+  // Nothing to pick yet: the beta has not opened, or no week is listed. The opening question is asked again,
+  // quietly once a minute and at once from that screen's Refresh link (`manual`, which answers in words). When
+  // a week is there, Picks is drawn without a reload. The promise it returns never fails.
+  function pollForOpening(manual) {
+    var token = state.bootToken;
+    return api('api_spreadBootstrap', function (t) { return [{ token: t }, true]; }, { quiet: !manual }).then(function (b) {
+      if (token !== state.bootToken || state.weekKey) return;
+      if (Array.isArray(b.weeks) && b.weeks.length) { enterApp(b); return; }
+      if (manual) toast(b.open === false ? 'Not open yet.' : 'No games yet.');
+    }, function (e) {
+      if (manual && !(e && (e.refused || e.signedOut))) toast('Couldn’t refresh: ' + cleanMessage(e), 7000);
+    });
+  }
+
+  function refreshVisible() {
+    if (!state.me || !transport.url) return Promise.resolve();
+    if (!state.stale && !state.weekKey && state.boot && !(state.boot.weeks || []).length) return pollForOpening(false);
+    // The saved copy is on screen: the opening question is asked again, unless "Not now" was the answer to the
+    // sign-in dialog. Then it waits until the player asks for something (the Refresh link does).
+    if (state.stale) { if (!dialogOpen() && !state.reauthMuted) fetchBootstrap(); return Promise.resolve(); }
+    if (state.view === 'scoreboard') return refreshScoreboardQuietly();
+    if (state.view === 'live') return refreshLiveQuietly();
+    return refreshWeekQuietly();
+  }
+
+  // Back on screen (phone unlocked, tab switched back): refresh now if what is showing is a minute old.
+  function onVisibility() {
+    if (document.hidden) { clearTimeout(autoTimer); autoTimer = null; return; }
+    if (!state.me) return;
+    var at = state.view === 'scoreboard' ? state.scoreboardAt : (state.view === 'live' ? state.liveAt : state.weekAt);
+    if (at && Date.now() - at >= AUTO_REFRESH_MS) refreshVisible();
+    scheduleAutoRefresh();
+  }
+
+  // ---------------------------------------------------------------
+  // Views, weeks
+  // ---------------------------------------------------------------
+  function weekOptionLabel(w) {
+    return String(w.label || w.key) + (w.status === 'live' ? ' (live)' : (w.status === 'final' ? ' (final)' : ''));
+  }
+
+  function findWeekMeta(key) {
+    var weeks = (state.boot && state.boot.weeks) || [];
+    for (var i = 0; i < weeks.length; i++) if (String(weeks[i].key) === String(key)) return weeks[i];
+    return null;
+  }
+
+  function populateWeeks() {
+    var sel = els.weekSelect, weeks = (state.boot && state.boot.weeks) || [];
+    clear(sel);
+    weeks.forEach(function (w) { sel.appendChild(h('option', { value: String(w.key), text: weekOptionLabel(w) })); });
+    sel.value = state.weekKey;
+    els.weekField.hidden = !weeks.length;          // nothing to choose from before the beta opens
+  }
+
+  // Keep the week menu's "(live)" / "(final)" in step with the freshest status the server reported.
+  function syncWeekOption(w) {
+    var meta = w && w.status ? findWeekMeta(w.key) : null;
+    if (!meta || meta.status === w.status) return;
+    meta.status = w.status;
+    populateWeeks();
+  }
+
+  // One selected week for Picks and Live. Unsaved picks are kept until a week change is confirmed.
+  function chooseWeek(next) {
+    next = String(next);
+    els.weekSelect.value = state.weekKey;
+    var liveSelect = els.liveContent.querySelector('select');
+    if (liveSelect) liveSelect.value = state.weekKey;
+    if (next === state.weekKey) return Promise.resolve(true);
+    if (!findWeekMeta(next) || state.weekChanging) return Promise.resolve(false);
+    if (state.saving) { toast('Wait for your picks to finish saving.'); return Promise.resolve(false); }
+    state.weekChanging = true;
+    return guardUnsaved().then(function (ok) {
+      state.weekChanging = false;
+      if (!ok || state.saving) return false;
+      state.weekKey = next;
+      state.weekChosen = true;
+      els.weekSelect.value = next;
+      state.liveGameId = ''; state.liveDetail = null; state.liveGridScroll = 0;
+      state.liveToken++; state.liveLoading = false; state.liveRefreshing = false;
+      if (state.stale) { state.stale = false; state.staleFailed = false; }
+      loadWeek();
+      if (state.view === 'live') loadLive(true);
+      return true;
+    });
+  }
+
+  function setView(v) {
+    state.view = v;
+    els.view.picks.hidden = v !== 'picks';
+    els.view.live.hidden = v !== 'live';
+    els.view.scoreboard.hidden = v !== 'scoreboard';
+    ['picks', 'live', 'scoreboard'].forEach(function (k) { els.tab[k].setAttribute('aria-selected', v === k ? 'true' : 'false'); });
+    renderSavebar();
+    if (v === 'scoreboard') loadScoreboard(false);
+    else if (v === 'live') loadLive(false);
+    else if (state.weekAt && Date.now() - state.weekAt >= AUTO_REFRESH_MS) refreshWeekQuietly();
+    try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
+  }
+
+  // ---------------------------------------------------------------
+  // This phone's copy of the last answers (design 10.5): the page draws it at once on the next open, says
+  // "Updating…", and swaps in the fresh answer when it arrives. Nothing can be saved until then.
+  // ---------------------------------------------------------------
+  function saveCache() {
+    if (!state.boot || !state.me || state.stale) return;
+    try { writeStore(STORE.cache, JSON.stringify({ v: 1, player: state.me, boot: state.boot, week: state.week })); } catch (e) { /* too big or unavailable */ }
+  }
+
+  function readCache() {
+    var raw = readStore(STORE.cache);
+    if (!raw) return null;
+    var c = null;
+    try { c = JSON.parse(raw); } catch (e) { c = null; }
+    var player = readStore(STORE.player);
+    var good = !!c && c.v === 1 && !!c.boot && Array.isArray(c.boot.weeks) && !!player && c.player === player && c.boot.me === player && !!readStore(STORE.token);
+    if (!good) { dropStore(STORE.cache); return null; }       // unreadable, or it belongs to another player
+    return c;
+  }
+
+  function signOutLocal() {
+    dropStore(STORE.token);
+    dropStore(STORE.player);
+    dropStore(STORE.cache);
+    clearTimeout(autoTimer); autoTimer = null;
+    state.bootToken++; state.reqToken++; state.liveToken++; state.sbToken++;
+    state.boot = null; state.me = ''; state.stale = false; state.staleFailed = false;
+    state.weekKey = ''; state.weekChosen = false; state.week = null; state.weekFailed = false; state.picks = {}; state.loaded = { picks: {}, tbGuess: null }; state.tbGuess = '';
+    state.saving = false; state.weekRefreshing = false; state.weekAt = 0; state.weekJson = '';
+    state.live = null; state.liveLoading = false; state.liveRefreshing = false; state.liveAt = 0; state.liveJson = ''; state.liveDetail = null; state.liveGameId = '';
+    state.scoreboard = null; state.scoreboardLoading = false; state.sbRefreshing = false; state.scoreboardAt = 0; state.scoreboardJson = '';
+    state.view = 'picks';
+    cardMap = {}; tbRefs = null; soonEl = null;
+    clear(els.picksContent); clear(els.liveContent); clear(els.scoreboardContent);
+    ['picks', 'live', 'scoreboard'].forEach(function (k) { els.tab[k].setAttribute('aria-selected', k === 'picks' ? 'true' : 'false'); });
+  }
+
+  // "Sign out": this phone forgets the token; next time it needs the PIN again.
+  function signOut() {
+    els.account.open = false;
+    if (!state.me) return;
+    var name = state.me;
+    guardUnsaved().then(function (ok) {
+      if (!ok) return false;
+      return confirmDialog({ title: 'Sign ' + name + ' out on this phone?', body: 'Signing in again on this phone will need ' + possessive(name) + ' PIN and the Admin PIN.',
+        okText: 'Sign out', cancelText: 'Stay signed in', safe: 'ok' });
+    }).then(function (yes) {
+      if (!yes) return;
+      var token = readStore(STORE.token);
+      if (token) post('api_spreadSignOut', [token]).catch(function () { /* the token is forgotten here either way */ });
+      signOutLocal();
+      start();
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Opening the page
+  // ---------------------------------------------------------------
+  function pickWeekKey(b, prefer) {
+    var keys = (b.weeks || []).map(function (w) { return String(w.key); });
+    var order = [prefer, b.currentWeekKey, b.displayWeekKey, keys[0]];
+    for (var i = 0; i < order.length; i++) {
+      var k = (order[i] === null || order[i] === undefined) ? '' : String(order[i]);
+      if (k && keys.indexOf(k) >= 0) return k;
+    }
+    return '';
+  }
+
+  function withoutWeek(b) {
+    var o = {};
+    Object.keys(b).forEach(function (k) { if (k !== 'week') o[k] = b[k]; });
+    return o;
+  }
+
+  // Draw this phone's saved copy while the fresh answer is on its way.
+  function paintFromCache(c) {
+    state.stale = true; state.staleFailed = false;
+    state.boot = c.boot;
+    state.me = String(c.boot.me);
+    state.weekKey = pickWeekKey(c.boot, c.week ? c.week.key : '');
+    showApp();
+    populateWeeks();
+    if (c.week && String(c.week.key) === state.weekKey) { adoptStale(c.week); renderWeek(); }
+    else { state.week = null; skeleton(els.picksContent, 4, true); }
+    renderSavebar();
+  }
+
+  function adoptStale(w) {
+    state.week = w;
+    state.picks = {};
+    state.loaded = { picks: {}, tbGuess: numOrNull(w.tbGuess) };
+    (w.games || []).forEach(function (g) {
+      var a = g.ats ? String(g.ats) : '', m = g.ml ? String(g.ml) : '';
+      state.picks[g.eventId] = { ats: a, ml: m, shown: null };
+      state.loaded.picks[g.eventId] = { ats: a, ml: m };
+    });
+    state.tbGuess = state.loaded.tbGuess === null ? '' : String(state.loaded.tbGuess);
+    state.weekJson = JSON.stringify(w);
+  }
+
+  // The fresh bootstrap answer: one question at open, with the current week inside it (design 10.5).
+  function enterApp(b) {
+    var wasStale = state.stale, hadWeek = state.week, dirty = wasStale && isDirty();
+    var week = (b.week && typeof b.week === 'object') ? b.week : null;
+    state.boot = withoutWeek(b);
+    state.me = String(b.me || readStore(STORE.player) || '');
+    writeStore(STORE.player, state.me);
+    if (b.title) { try { document.title = String(b.title); } catch (e) { /* ignore */ } }
+    // Unsaved taps made on the saved copy keep their week on screen, and so does a week chosen while this
+    // answer was on its way; otherwise the current week opens.
+    var keep = (wasStale && hadWeek && dirty) ? String(hadWeek.key) : (state.weekChosen ? state.weekKey : '');
+    state.weekKey = pickWeekKey(state.boot, keep || (week ? week.key : ''));
+    showApp();
+    populateWeeks();
+    var onScreen = !!hadWeek && String(hadWeek.key) === state.weekKey;
+    if (week && String(week.key) === state.weekKey) {
+      if (wasStale && onScreen) {
+        showFreshWeek(week, '');
+      } else {
+        state.stale = false; state.staleFailed = false;
+        state.reqToken++;
+        adoptWeek(week);
+        renderWeek();
+        renderSavebar();
+      }
+      if (gamesOn(week.games)) refreshWeekQuietly();         // a game is on: fresh scores now, not in a minute
+    } else if (wasStale && onScreen) {
+      refreshWeekQuietly('open');        // the answer carried another week: this one stays "Updating…" until its own arrives
+    } else {
+      state.stale = false; state.staleFailed = false;
+      if (!onScreen) loadWeek();
+    }
+    saveCache();
+    if (state.view === 'live') loadLive(false);
+    else if (state.view === 'scoreboard') loadScoreboard(false);
+    scheduleAutoRefresh();
+  }
+
+  function fetchBootstrap() {
+    var token = ++state.bootToken;
+    api('api_spreadBootstrap', function (t) { return [{ token: t }, true]; }).then(function (b) {
+      if (token !== state.bootToken) return;
+      enterApp(b);
+    }).catch(function (e) {
+      if (token !== state.bootToken) return;
+      if (e && e.signedOut) return;
+      if (state.stale && state.boot) {
+        state.staleFailed = true;
+        renderPicksMeta();
+        if (!(e && e.refused)) toast('Couldn’t update: ' + cleanMessage(e), 7000);
+        scheduleAutoRefresh();
+        return;
+      }
+      showGate(noticeCard('Couldn’t open Spread Pick ’Em', cleanMessage(e), 'Try again', function () { start(); }));
+    });
+  }
+
+  // Everything after the address is known: draw the saved copy if this phone has one, then ask the server.
+  function start() {
+    var cache = readCache(), painted = false;
+    if (cache) {
+      try { paintFromCache(cache); painted = true; }
+      catch (e) {
+        // A copy that cannot be drawn (damaged, or left by another version of this page) must never keep the page
+        // from asking the server: it is dropped, and the page opens as it does on a phone with no copy.
+        dropStore(STORE.cache);
+        state.stale = false; state.staleFailed = false; state.boot = null; state.me = ''; state.week = null; state.weekKey = '';
+      }
+    }
+    if (!painted) showGate(h('p', { class: 'boot-note', text: 'Loading…' }));
+    fetchBootstrap();
+  }
+
+  function boot() {
+    buildShell();
+    if (readStore(STORE.liveView) === 'games') state.liveView = 'games';
+    resolveTransport().then(function (t) {
+      transport = t;
+      if (!t.url) { showGate(noticeCard(t.title, t.body)); return; }
+      start();
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 </body>
