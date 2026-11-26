@@ -5,33 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
-<title>Spread Pick 'Em BETA: field colors</title>
+<title>Spread Pick 'Em BETA: the look</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;display=swap">
 <style>
   /*
    * Design preview only (nothing is saved, no server). Layout, type and components are the pool's "Broadcast light"
    * page; what changes per scheme is the set of color roles below.
    */
-  body[data-scheme=chalk] {      /* 1. Field and chalk: grass, white yard lines, and picks filled in black like an official's stripes. */
+  body {   /* Field and chalk (Joseph, 2026-11-25): grass and white yard lines. A spread pick is filled evergreen, a winner pick football-leather brown. */
     --head-bg:#0f3d2e; --head-fg:#ffffff; --head-sub:#b7d3c5; --rule:#ffffff; --block-rule:#0f3d2e;
     --bg:#f4f6f3; --card:#ffffff; --ink:#16241d; --muted:#56655d; --line:#d9e0da; --block-bg:#e7ede8;
-    --sel-bd:#16241d; --sel-bg:#16241d; --sel-ink:#ffffff;
+    --sel-ats:#1a5c40; --sel-ml:#6f4320; --sel-ink:#ffffff; --sel-bd:#1a5c40;
     --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d;
     --tab-on:#0f3d2e; --btn-bg:#0f3d2e; --btn-fg:#ffffff; --link:#0f5b40; --chip:transparent; --toast-bg:#16241d; --toast-fg:#ffffff;
-  }
-  body[data-scheme=blue] {       /* 2. Field and blue line: the same field, picks in the blue TV draws at the line of scrimmage. */
-    --head-bg:#0f3d2e; --head-fg:#ffffff; --head-sub:#b7d3c5; --rule:#ffffff; --block-rule:#0f3d2e;
-    --bg:#f4f6f3; --card:#ffffff; --ink:#16241d; --muted:#56655d; --line:#d9e0da; --block-bg:#e7ede8;
-    --sel-bd:#2a5bd7; --sel-bg:#e4edff; --sel-ink:#16241d;
-    --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d;
-    --tab-on:#0f3d2e; --btn-bg:#0f3d2e; --btn-fg:#ffffff; --link:#0f5b40; --chip:transparent; --toast-bg:#16241d; --toast-fg:#ffffff;
-  }
-  body[data-scheme=pigskin] {    /* 3. Pigskin: football leather and white laces. Picks in leather tan. */
-    --head-bg:#4a2b16; --head-fg:#ffffff; --head-sub:#d9c4b0; --rule:#ffffff; --block-rule:#4a2b16;
-    --bg:#f5f4f1; --card:#ffffff; --ink:#231a13; --muted:#655a50; --line:#e0dbd4; --block-bg:#ece7e0;
-    --sel-bd:#8a5a2b; --sel-bg:#f3e2cc; --sel-ink:#231a13;
-    --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d;
-    --tab-on:#4a2b16; --btn-bg:#4a2b16; --btn-fg:#ffffff; --link:#6b3f1f; --chip:transparent; --toast-bg:#231a13; --toast-fg:#ffffff;
   }
 
   * { box-sizing:border-box; }
@@ -94,9 +80,10 @@
   .score.lost { color:var(--muted); }
 
   .pick { position:relative; min-height:52px; padding:0 4px; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:5px; }
-  .pick[aria-pressed=true] { color:var(--sel-ink); background:var(--sel-bg); border-color:var(--sel-bd); box-shadow:inset 0 0 0 1px var(--sel-bd); }
-  .pick.ok { color:var(--ok); background:var(--ok-soft); border-color:var(--ok); box-shadow:inset 0 0 0 1px var(--ok); }
-  .pick.bad { color:var(--bad); background:var(--bad-soft); border-color:var(--bad); box-shadow:inset 0 0 0 1px var(--bad); }
+  .pick.s[aria-pressed=true] { color:var(--sel-ink); background:var(--sel-ats); border-color:var(--sel-ats); }
+  .pick.w[aria-pressed=true] { color:var(--sel-ink); background:var(--sel-ml); border-color:var(--sel-ml); }
+  .board .pick.ok { color:var(--ok); background:var(--ok-soft); border-color:var(--ok); box-shadow:inset 0 0 0 1px var(--ok); }
+  .board .pick.bad { color:var(--bad); background:var(--bad-soft); border-color:var(--bad); box-shadow:inset 0 0 0 1px var(--bad); }
   .pick .mark { position:absolute; top:4px; right:5px; width:13px; height:13px; }
   .pick.fixed { cursor:default; }                              /* kicked off: shows what was picked, no longer changes */
   .pick.na { color:var(--muted); border-style:dashed; }         /* not available while the favorite is your spread pick */
@@ -124,13 +111,8 @@
   @media(prefers-reduced-motion:reduce) { * { transition:none !important; } }
 </style>
 </head>
-<body data-scheme="chalk">
-<div class="chooser" role="group" aria-label="Color scheme. A preview control, not part of the page.">
-  <span>Scheme</span>
-  <button type="button" data-s="chalk" aria-pressed="true">1 · Field &amp; chalk</button>
-  <button type="button" data-s="blue" aria-pressed="false">2 · Blue line</button>
-  <button type="button" data-s="pigskin" aria-pressed="false">3 · Pigskin</button>
-</div>
+<body>
+
 
 <div class="app">
   <header>
@@ -161,7 +143,7 @@
 </div>
 
 <div class="savebar"><div class="savebar-inner">
-  <div class="meta"><span class="count" id="save-count"></span><span id="save-state">Nothing here is saved. This is a color preview.</span></div>
+  <div class="meta"><span class="count" id="save-count"></span><span id="save-state">Nothing here is saved. This is a preview of the look.</span></div>
   <button class="btn-primary" type="button" id="save-btn">Save Joe's picks</button>
 </div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -237,9 +219,9 @@
     if (favLock) g.ml = fav;                                    // taking the favorite locks the winner pick
     [g.away, g.home].forEach(function (abbr, i) {
       var isAts = g.ats === abbr, isMl = g.ml === abbr;
-      var s = h('button', { type: 'button', class: 'pick', 'aria-pressed': String(isAts),
+      var s = h('button', { type: 'button', class: 'pick s', 'aria-pressed': String(isAts),
         'aria-label': TEAMS[abbr][1] + ' ' + spreadText(spreadOf(g, abbr)) + ' against the spread', text: spreadText(spreadOf(g, abbr)) });
-      var w = h('button', { type: 'button', class: 'pick', 'aria-pressed': String(isMl), 'aria-label': TEAMS[abbr][1] + ' to win', text: 'Win' });
+      var w = h('button', { type: 'button', class: 'pick w', 'aria-pressed': String(isMl), 'aria-label': TEAMS[abbr][1] + ' to win', text: 'Win' });
       if (done) {
         var cover = coverOf(g), win = winnerOf(g);
         if (isAts) { s.className += cover === 'PUSH' || cover === abbr ? ' ok' : ' bad'; s.appendChild(svgMark(cover === 'PUSH' || cover === abbr ? 'ok' : 'bad')); }
@@ -314,7 +296,7 @@
   Array.prototype.forEach.call(document.querySelectorAll('.chooser button'), function (b) {
     b.addEventListener('click', function () { setScheme(b.getAttribute('data-s')); });
   });
-  document.getElementById('save-btn').addEventListener('click', function () { toast('Nothing is saved here. This page only shows colors.'); });
+  document.getElementById('save-btn').addEventListener('click', function () { toast('Nothing is saved here. This page only shows the look.'); });
   var wanted = String(location.hash || '').replace('#', '');
   if (wanted === 'chalk' || wanted === 'blue' || wanted === 'pigskin') setScheme(wanted);
   redraw();
