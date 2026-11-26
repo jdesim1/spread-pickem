@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Spread Pick 'Em BETA: card layouts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;display=swap">
+<style>
+  /* Tokens, type and components are the approved "Broadcast light" ones from the pool's phone page. */
+  :root { --accent:#294cc6; --accent-soft:#edf2ff; --ink:#172538; --muted:#505f72; --line:#dbe1e8; --bg:#f5f6f8; --broadcast-red:#ba3441; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; }
+  body { font:15px/1.4 Arial,Helvetica,sans-serif; color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
+  button { font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  .title-row { background:#162d47; color:#fff; padding:16px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .title { margin:0; padding-left:10px; border-left:4px solid var(--broadcast-red); font:700 25px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; letter-spacing:.2px; text-transform:uppercase; }
+  .beta { font-size:12px; font-weight:700; letter-spacing:.6px; color:#b9c9dc; }
+
+  main { max-width:650px; margin:0 auto; padding:0 12px 48px; }
+  .ask { margin:16px 0 0; font-size:14px; color:var(--muted); }
+  .option { margin:26px 0 0; padding-bottom:10px; border-bottom:2px solid var(--ink); display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .option h2 { margin:0; font:700 27px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; }
+  .option span { font-size:13px; color:var(--muted); text-align:right; }
+
+  .kickoff-block { margin:18px 0 0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:#e9edf3; border-left:3px solid var(--broadcast-red); }
+  .game { padding:14px 0; border-top:1px solid var(--line); }
+  .kickoff-block + .game { border-top:0; }
+  .card-head { display:flex; justify-content:space-between; gap:8px; font-size:13px; color:var(--muted); margin-bottom:10px; }
+
+  .logo { width:40px; height:34px; flex:0 0 40px; display:grid; place-items:center; }
+  .logo img { max-width:36px; max-height:34px; object-fit:contain; display:block; }
+  .who b { display:block; font-size:16px; font-weight:700; }
+  .who small { display:block; font-size:13px; color:var(--muted); }
+
+  .pick { background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:5px; transition:background-color .12s ease, border-color .12s ease; }
+  .pick[aria-pressed=true] { border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent); }
+
+  /* ---- A: teams as rows ---- */
+  .board { display:grid; grid-template-columns:minmax(0,1fr) 78px 78px; gap:8px; align-items:center; }
+  .board .col { font-size:12px; color:var(--muted); text-align:center; }
+  .board .tm { display:flex; align-items:center; gap:10px; min-width:0; }
+  .board .pick { min-height:52px; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+
+  /* ---- B: teams side by side ---- */
+  .lbl { font-size:12px; color:var(--muted); margin:0 0 6px; }
+  .lbl + .pair + .lbl { margin-top:12px; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .team { position:relative; min-height:86px; display:grid; grid-template-columns:40px minmax(0,1fr); align-items:center; gap:10px; padding:29px 12px 12px; text-align:left; }
+  .team .side { position:absolute; top:8px; left:12px; font-size:11px; color:var(--muted); letter-spacing:.4px; }
+  .slim { min-height:48px; font-size:16px; font-weight:700; }
+
+  .ou { margin-top:10px; font-size:13px; color:var(--muted); }
+  .count { margin:18px 0 0; font-size:14px; }
+  .count strong { font-size:20px; }
+  @media(max-width:360px) { .board { grid-template-columns:minmax(0,1fr) 68px 68px; } .team { padding-left:8px; padding-right:8px; gap:6px; } }
+  @media(prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<header class="title-row"><h1 class="title">Spread Pick 'Em</h1><span class="beta">BETA · LAYOUTS</span></header>
+<main>
+  <p class="ask">Two ways to lay out a game now that every game gets two picks. Tap the buttons in each, then tell Claude A or B. Nothing here is saved.</p>
+
+  <div class="option"><h2>Option A</h2><span>Teams as rows</span></div>
+  <section id="opt-a"></section>
+
+  <div class="option"><h2>Option B</h2><span>Teams side by side</span></div>
+  <section id="opt-b"></section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var LOGO = 'https://cdn.jsdelivr.net/gh/frertommy/team-logos@main/NFL/';
+  var TEAMS = {
+    KC: ['AFC', 'Kansas City Chiefs'], BUF: ['AFC', 'Buffalo Bills'], DEN: ['AFC', 'Denver Broncos'],
+    PIT: ['AFC', 'Pittsburgh Steelers'], PHI: ['NFC', 'Philadelphia Eagles'], DAL: ['NFC', 'Dallas Cowboys']
+  };
+  // Real Week 12 lines as saved Wed 11/25, 7:58 PM ET (home team's number; negative = home favoured).
+  var SLATE = [
+    { block: 'Thursday, Nov 26 · 4:30 PM ET', games: [{ id: 'g1', away: 'PHI', home: 'DAL', homeSpread: -8.5, total: 47.5, time: '4:30 PM ET' }] },
+    { block: 'Thursday, Nov 26 · 8:20 PM ET', games: [{ id: 'g2', away: 'KC', home: 'BUF', homeSpread: -3, total: 46.5, time: '8:20 PM ET' }] },
+    { block: 'Friday, Nov 27 · 3:00 PM ET', games: [{ id: 'g3', away: 'DEN', home: 'PIT', homeSpread: 3.5, total: 36.5, time: '3:00 PM ET' }] }
+  ];
+
+  function h(tag, attrs, kids) {
+    var el = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'text') el.textContent = attrs[k];
+      else if (k === 'class') el.className = attrs[k];
+      else el.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    return el;
+  }
+  function nick(abbr) { return TEAMS[abbr][1].split(' ').slice(-1)[0]; }
+  function spreadText(n) { return n === 0 ? 'PK' : (n > 0 ? '+' : '−') + Math.abs(n); }   // a real minus sign, not a hyphen
+  function logo(abbr) {
+    var t = TEAMS[abbr], img = h('img', { alt: '' });
+    img.addEventListener('error', function () { img.replaceWith(document.createTextNode(abbr)); });
+    img.src = LOGO + t[0] + '/' + encodeURIComponent(t[1]) + '/' + t[1].toLowerCase().replace(/ /g, '-') + '.svg';
+    return h('span', { class: 'logo' }, [img]);
+  }
+  // One tap picks, a tap on the picked button clears it. The two picks of a game never touch each other.
+  function wire(btn, state, key, value, group, after) {
+    btn.addEventListener('click', function () {
+      state[key] = state[key] === value ? '' : value;
+      group.forEach(function (o) { o.el.setAttribute('aria-pressed', String(state[key] === o.value)); });
+      after();
+    });
+    group.push({ el: btn, value: value });
+  }
+
+  function build(root, variant) {
+    var picks = {}, total = 0;
+    var count = h('p', { class: 'count' });
+    function refresh() {
+      var done = Object.keys(picks).filter(function (id) { return picks[id].ats && picks[id].ml; }).length;
+      count.innerHTML = '';
+      count.appendChild(h('strong', { text: done + ' of ' + total }));
+      count.appendChild(document.createTextNode(' games fully picked'));
+    }
+    SLATE.forEach(function (slot) {
+      root.appendChild(h('h3', { class: 'kickoff-block', text: slot.block }));
+      slot.games.forEach(function (g) {
+        total++;
+        var st = picks[g.id] = { ats: '', ml: '' };
+        var sp = { away: -g.homeSpread, home: g.homeSpread }, atsGroup = [], mlGroup = [];
+        var card = h('div', { class: 'game' });
+        if (variant === 'a') {
+          var board = h('div', { class: 'board' }, [h('span'), h('span', { class: 'col', text: 'Spread' }), h('span', { class: 'col', text: 'Winner' })]);
+          ['away', 'home'].forEach(function (side) {
+            var abbr = g[side];
+            var s = h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', 'aria-label': TEAMS[abbr][1] + ' ' + spreadText(sp[side]) + ' against the spread', text: spreadText(sp[side]) });
+            var w = h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', 'aria-label': TEAMS[abbr][1] + ' to win', text: 'Win' });
+            wire(s, st, 'ats', abbr, atsGroup, refresh); wire(w, st, 'ml', abbr, mlGroup, refresh);
+            board.appendChild(h('div', { class: 'tm' }, [logo(abbr), h('span', { class: 'who' }, [h('b', { text: abbr }), h('small', { text: nick(abbr) + ' · ' + side })])]));
+            board.appendChild(s); board.appendChild(w);
+          });
+          card.appendChild(board);
+        } else {
+          var spreadRow = h('div', { class: 'pair' }), winRow = h('div', { class: 'pair' });
+          ['away', 'home'].forEach(function (side) {
+            var abbr = g[side];
+            var s = h('button', { type: 'button', class: 'pick team', 'aria-pressed': 'false', 'aria-label': TEAMS[abbr][1] + ' ' + spreadText(sp[side]) + ' against the spread' }, [
+              h('span', { class: 'side', text: side.toUpperCase() }), logo(abbr),
+              h('span', { class: 'who' }, [h('b', { text: abbr + ' ' + spreadText(sp[side]) }), h('small', { text: nick(abbr) })])]);
+            var w = h('button', { type: 'button', class: 'pick slim', 'aria-pressed': 'false', 'aria-label': TEAMS[abbr][1] + ' to win', text: abbr });
+            wire(s, st, 'ats', abbr, atsGroup, refresh); wire(w, st, 'ml', abbr, mlGroup, refresh);
+            spreadRow.appendChild(s); winRow.appendChild(w);
+          });
+          card.appendChild(h('div', { class: 'lbl', text: 'Against the spread' })); card.appendChild(spreadRow);
+          card.appendChild(h('div', { class: 'lbl', text: 'Winner' })); card.appendChild(winRow);
+        }
+        card.appendChild(h('div', { class: 'ou', text: 'Over/under ' + g.total }));
+        root.appendChild(card);
+      });
+    });
+    root.appendChild(count);
+    refresh();
+  }
+
+  build(document.getElementById('opt-a'), 'a');
+  build(document.getElementById('opt-b'), 'b');
+})();
+</script>
+</body>
+</html>
