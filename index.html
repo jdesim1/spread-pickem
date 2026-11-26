@@ -5,167 +5,317 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
-<title>Spread Pick 'Em BETA: card layouts</title>
+<title>Spread Pick 'Em BETA: color schemes</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;display=swap">
 <style>
-  /* Tokens, type and components are the approved "Broadcast light" ones from the pool's phone page. */
-  :root { --accent:#294cc6; --accent-soft:#edf2ff; --ink:#172538; --muted:#505f72; --line:#dbe1e8; --bg:#f5f6f8; --broadcast-red:#ba3441; }
+  /*
+   * Design preview only (nothing is saved, no server). Layout, type and components are the pool's "Broadcast light"
+   * page; what changes per scheme is the set of color roles below.
+   */
+  body[data-scheme=turf] {       /* 1. Turf: field green, and the yellow line TV draws on the field. Picks are highlighted. */
+    --head-bg:#0f3d2e; --head-fg:#ffffff; --head-sub:#b7d3c5; --rule:#f5c518;
+    --bg:#f4f6f3; --card:#ffffff; --ink:#16241d; --muted:#56655d; --line:#d9e0da; --block-bg:#e7ede8;
+    --sel-bd:#b98a00; --sel-bg:#fff1b3; --sel-ink:#16241d;
+    --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d;
+    --tab-on:#0f3d2e; --btn-bg:#0f3d2e; --btn-fg:#ffffff; --link:#0f5b40; --chip:transparent; --toast-bg:#16241d; --toast-fg:#ffffff;
+  }
+  body[data-scheme=tote] {       /* 2. Tote board: a sportsbook wall at night. Amber numbers; a pick is a lit cell. */
+    --head-bg:#0b0d10; --head-fg:#ffffff; --head-sub:#9aa6b2; --rule:#ffb627;
+    --bg:#111418; --card:#1b2128; --ink:#f1f3f5; --muted:#a3aebb; --line:#333d47; --block-bg:#1c232b;
+    --sel-bd:#ffb627; --sel-bg:#ffb627; --sel-ink:#1a1400;
+    --ok:#3bd17f; --ok-soft:#123524; --bad:#ff7468; --bad-soft:#3b1a17; --live:#ff5a4f;
+    --tab-on:#ffb627; --btn-bg:#ffb627; --btn-fg:#1a1400; --link:#ffcf6b; --chip:#ffffff; --toast-bg:#f1f3f5; --toast-fg:#111418;
+  }
+  body[data-scheme=day] {        /* 3. Tote, daylight: the same black-and-amber board on a light page. */
+    --head-bg:#14171b; --head-fg:#ffffff; --head-sub:#aab3bd; --rule:#ffb627;
+    --bg:#f4f5f6; --card:#ffffff; --ink:#171a1e; --muted:#5a626c; --line:#dde1e5; --block-bg:#e9ecef;
+    --sel-bd:#b36b00; --sel-bg:#ffe7ad; --sel-ink:#171a1e;
+    --ok:#1f7a43; --ok-soft:#e8f4ec; --bad:#a23c3a; --bad-soft:#fbeeed; --live:#c22f3d;
+    --tab-on:#14171b; --btn-bg:#14171b; --btn-fg:#ffffff; --link:#8a5200; --chip:transparent; --toast-bg:#171a1e; --toast-fg:#ffffff;
+  }
+
   * { box-sizing:border-box; }
   html, body { margin:0; padding:0; }
   body { font:15px/1.4 Arial,Helvetica,sans-serif; color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
-  button { font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-  button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  button, input, select { font-family:inherit; }
+  button { cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline:2px solid var(--sel-bd); outline-offset:2px; }
+  [hidden] { display:none !important; }
 
-  .title-row { background:#162d47; color:#fff; padding:16px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .title { margin:0; padding-left:10px; border-left:4px solid var(--broadcast-red); font:700 25px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; letter-spacing:.2px; text-transform:uppercase; }
-  .beta { font-size:12px; font-weight:700; letter-spacing:.6px; color:#b9c9dc; }
+  /* ---- preview control (not part of the page) ---- */
+  .chooser { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:6px; padding:8px 10px; background:#2a2d31; color:#fff; font-size:12px; }
+  .chooser span { margin-right:2px; white-space:nowrap; }
+  .chooser button { flex:1; min-height:40px; padding:4px 6px; border:1px solid #6b7178; border-radius:4px; background:transparent; color:#fff; font-size:13px; font-weight:700; }
+  .chooser button[aria-pressed=true] { background:#fff; color:#17191c; border-color:#fff; }
 
-  main { max-width:650px; margin:0 auto; padding:0 12px 48px; }
-  .ask { margin:16px 0 0; font-size:14px; color:var(--muted); }
-  .option { margin:26px 0 0; padding-bottom:10px; border-bottom:2px solid var(--ink); display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-  .option h2 { margin:0; font:700 27px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; }
-  .option span { font-size:13px; color:var(--muted); text-align:right; }
+  /* ---- header + tabs ---- */
+  .app { max-width:650px; margin:0 auto; padding-bottom:104px; }
+  .title-row { background:var(--head-bg); color:var(--head-fg); padding:16px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .title { margin:0; padding-left:10px; border-left:4px solid var(--rule); font:700 25px/1.1 'Barlow Condensed','Arial Narrow',Arial,sans-serif; letter-spacing:.2px; text-transform:uppercase; }
+  .season-label { color:var(--head-sub); font-size:13px; margin-top:4px; padding-left:14px; }
+  .account { display:flex; align-items:center; gap:8px; font-size:14px; white-space:nowrap; }
+  .account-initial { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; color:var(--head-bg); background:var(--head-fg); font-size:13px; font-weight:700; }
+  .tabs { display:flex; background:var(--card); border-bottom:1px solid var(--line); padding:0 14px; }
+  .tab { flex:1; min-height:48px; background:none; border:0; border-bottom:3px solid transparent; font-size:15px; font-weight:700; color:var(--muted); }
+  .tab[aria-selected=true] { color:var(--ink); border-bottom-color:var(--tab-on); }
 
-  .kickoff-block { margin:18px 0 0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:#e9edf3; border-left:3px solid var(--broadcast-red); }
+  main { padding:0 12px; }
+  .controls { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:16px 0 4px; }
+  .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  select { min-height:44px; min-width:150px; font-size:16px; padding:8px 34px 8px 12px; border:1px solid var(--line); border-radius:4px; color:var(--ink); background-color:var(--card);
+    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23808a94' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center; -webkit-appearance:none; appearance:none; }
+  .as { font-size:13px; color:var(--muted); text-align:right; padding-bottom:12px; }
+  .as strong { color:var(--ink); }
+  .week-summary { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 0; font-size:14px; color:var(--muted); }
+  .week-summary strong { color:var(--ink); font-size:20px; font-weight:700; }
+  .link-btn { background:none; border:0; color:var(--link); font-size:13px; min-height:44px; padding:0 4px; }
+
+  /* ---- kickoff blocks + the two-pick game card (layout A: teams as rows) ---- */
+  .kickoff-block { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:22px 0 0; padding:10px 12px; font:700 21px/1.2 'Barlow Condensed',Arial,sans-serif; background:var(--block-bg); border-left:3px solid var(--rule); }
+  .kickoff-block:first-child { margin-top:6px; }
+  .kickoff-block small { font:400 13px/1.2 Arial,Helvetica,sans-serif; color:var(--muted); white-space:nowrap; }
+  .kickoff-block .live-flag { font:700 12px/1.2 Arial,Helvetica,sans-serif; }
+  .live-flag { color:var(--live); letter-spacing:.3px; white-space:nowrap; }
+  .live-flag::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin-right:5px; vertical-align:1px; }
   .game { padding:14px 0; border-top:1px solid var(--line); }
   .kickoff-block + .game { border-top:0; }
-  .card-head { display:flex; justify-content:space-between; gap:8px; font-size:13px; color:var(--muted); margin-bottom:10px; }
-
-  .logo { width:40px; height:34px; flex:0 0 40px; display:grid; place-items:center; }
-  .logo img { max-width:36px; max-height:34px; object-fit:contain; display:block; }
-  .who b { display:block; font-size:16px; font-weight:700; }
-  .who small { display:block; font-size:13px; color:var(--muted); }
-
-  .pick { background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:5px; transition:background-color .12s ease, border-color .12s ease; }
-  .pick[aria-pressed=true] { border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent); }
-
-  /* ---- A: teams as rows ---- */
-  .board { display:grid; grid-template-columns:minmax(0,1fr) 78px 78px; gap:8px; align-items:center; }
+  .board { display:grid; grid-template-columns:minmax(0,1fr) auto 78px 78px; gap:8px; align-items:center; }
   .board .col { font-size:12px; color:var(--muted); text-align:center; }
-  .board .tm { display:flex; align-items:center; gap:10px; min-width:0; }
-  .board .pick { min-height:52px; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .tm { display:flex; align-items:center; gap:10px; min-width:0; }
+  .logo { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; border-radius:50%; background:var(--chip); }
+  .logo img { max-width:30px; max-height:30px; object-fit:contain; display:block; }
+  .logo .fb { font-size:11px; font-weight:700; color:#17191c; }
+  .who b { display:block; font-size:16px; font-weight:700; }
+  .who small { display:block; font-size:13px; color:var(--muted); white-space:nowrap; }
+  .score { min-width:26px; text-align:right; font:700 24px/1 'Barlow Condensed',Arial,sans-serif; font-variant-numeric:tabular-nums; }
+  .score.lost { color:var(--muted); }
 
-  /* ---- B: teams side by side ---- */
-  .lbl { font-size:12px; color:var(--muted); margin:0 0 6px; }
-  .lbl + .pair + .lbl { margin-top:12px; }
-  .pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .team { position:relative; min-height:86px; display:grid; grid-template-columns:40px minmax(0,1fr); align-items:center; gap:10px; padding:29px 12px 12px; text-align:left; }
-  .team .side { position:absolute; top:8px; left:12px; font-size:11px; color:var(--muted); letter-spacing:.4px; }
-  .slim { min-height:48px; font-size:16px; font-weight:700; }
+  .pick { position:relative; min-height:52px; padding:0 4px; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:5px; }
+  .pick[aria-pressed=true] { color:var(--sel-ink); background:var(--sel-bg); border-color:var(--sel-bd); box-shadow:inset 0 0 0 1px var(--sel-bd); }
+  .pick.ok { color:var(--ok); background:var(--ok-soft); border-color:var(--ok); box-shadow:inset 0 0 0 1px var(--ok); }
+  .pick.bad { color:var(--bad); background:var(--bad-soft); border-color:var(--bad); box-shadow:inset 0 0 0 1px var(--bad); }
+  .pick .mark { position:absolute; top:4px; right:5px; width:13px; height:13px; }
+  .pick.fixed { cursor:default; }                              /* kicked off: shows what was picked, no longer changes */
+  .pick.na { color:var(--muted); border-style:dashed; }         /* not available while the favorite is your spread pick */
+  .note { margin:10px 0 0; font-size:13px; color:var(--muted); }
+  .note.result { color:var(--ink); }
+  .note strong { color:var(--ink); }
 
-  .ou { margin-top:10px; font-size:13px; color:var(--muted); }
-  .count { margin:18px 0 0; font-size:14px; }
-  .count strong { font-size:20px; }
-  @media(max-width:360px) { .board { grid-template-columns:minmax(0,1fr) 68px 68px; } .team { padding-left:8px; padding-right:8px; gap:6px; } }
+  /* ---- total points ---- */
+  .tb-card { margin-top:22px; padding:18px; background:var(--card); border:1px solid var(--line); border-radius:5px; }
+  .tb-title { font-size:13px; color:var(--muted); }
+  .tb-game { font-size:16px; font-weight:700; margin:2px 0 10px; }
+  .tb-card input { width:100%; min-height:52px; font-size:22px; font-weight:700; text-align:center; border:1px solid var(--line); border-radius:4px; padding:8px 12px; background:var(--card); color:var(--ink); -webkit-appearance:none; appearance:none; }
+  .tb-ref { display:flex; justify-content:space-between; gap:10px; margin-top:10px; font-size:13px; color:var(--muted); }
+  .tb-ref strong { color:var(--ink); font-variant-numeric:tabular-nums; }
+
+  /* ---- save bar + toast ---- */
+  .savebar { position:fixed; left:0; right:0; bottom:0; z-index:20; background:var(--card); border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); }
+  .savebar-inner { max-width:626px; margin:0 auto; display:flex; align-items:center; gap:12px; }
+  .savebar .meta { flex:1; min-width:0; font-size:13px; color:var(--muted); }
+  .savebar .count { display:block; font-weight:700; color:var(--ink); }
+  .btn-primary { min-height:48px; padding:0 16px; background:var(--btn-bg); color:var(--btn-fg); border:0; border-radius:4px; font-size:15px; font-weight:700; }
+  .toast { position:fixed; left:12px; right:12px; bottom:86px; z-index:40; max-width:626px; margin:0 auto; background:var(--toast-bg); color:var(--toast-fg); padding:12px 14px; border-radius:5px; font-size:14px; opacity:0; transform:translateY(8px); transition:opacity .18s ease, transform .18s ease; pointer-events:none; }
+  .toast.show { opacity:1; transform:none; }
+  @media(max-width:360px) { .board { grid-template-columns:minmax(0,1fr) auto 68px 68px; } }
   @media(prefers-reduced-motion:reduce) { * { transition:none !important; } }
 </style>
 </head>
-<body>
-<header class="title-row"><h1 class="title">Spread Pick 'Em</h1><span class="beta">BETA · LAYOUTS</span></header>
-<main>
-  <p class="ask">Two ways to lay out a game now that every game gets two picks. Tap the buttons in each, then tell Claude A or B. Nothing here is saved.</p>
+<body data-scheme="turf">
+<div class="chooser" role="group" aria-label="Color scheme. A preview control, not part of the page.">
+  <span>Scheme</span>
+  <button type="button" data-s="turf" aria-pressed="true">1 · Turf</button>
+  <button type="button" data-s="tote" aria-pressed="false">2 · Tote board</button>
+  <button type="button" data-s="day" aria-pressed="false">3 · Tote, daylight</button>
+</div>
 
-  <div class="option"><h2>Option A</h2><span>Teams as rows</span></div>
-  <section id="opt-a"></section>
+<div class="app">
+  <header>
+    <div class="title-row">
+      <div><h1 class="title">Spread Pick 'Em</h1><div class="season-label">Beta · 2026–27</div></div>
+      <div class="account"><span class="account-initial">J</span>Joe</div>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab" type="button" aria-selected="true">Picks</button>
+      <button class="tab" type="button" aria-selected="false">Live</button>
+      <button class="tab" type="button" aria-selected="false">Scoreboard</button>
+    </nav>
+  </header>
+  <main>
+    <div class="controls">
+      <div class="field"><label for="wk">Week</label><select id="wk" aria-label="Week"><option>Week 12 (live)</option><option>Week 13</option></select></div>
+      <div class="as">Picking as <strong>Joe</strong></div>
+    </div>
+    <div class="week-summary"><div id="summary"></div><button class="link-btn" type="button">Refresh</button></div>
+    <div id="cards"></div>
+    <div class="tb-card">
+      <div class="tb-title">Tiebreaker · Monday 8:15 PM ET</div>
+      <div class="tb-game">Total points in CAR @ TB</div>
+      <input type="text" inputmode="numeric" placeholder="45" aria-label="Your total points guess" maxlength="3">
+      <div class="tb-ref"><span>Closest guess wins a tied week.</span><span>Over/under <strong>43.5</strong></span></div>
+    </div>
+  </main>
+</div>
 
-  <div class="option"><h2>Option B</h2><span>Teams side by side</span></div>
-  <section id="opt-b"></section>
-</main>
+<div class="savebar"><div class="savebar-inner">
+  <div class="meta"><span class="count" id="save-count"></span><span id="save-state">Nothing here is saved. This is a color preview.</span></div>
+  <button class="btn-primary" type="button" id="save-btn">Save Joe's picks</button>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function () {
   'use strict';
   var LOGO = 'https://cdn.jsdelivr.net/gh/frertommy/team-logos@main/NFL/';
   var TEAMS = {
-    KC: ['AFC', 'Kansas City Chiefs'], BUF: ['AFC', 'Buffalo Bills'], DEN: ['AFC', 'Denver Broncos'],
-    PIT: ['AFC', 'Pittsburgh Steelers'], PHI: ['NFC', 'Philadelphia Eagles'], DAL: ['NFC', 'Dallas Cowboys']
+    GB: ['NFC', 'Green Bay Packers'], LAR: ['NFC', 'Los Angeles Rams'], CHI: ['NFC', 'Chicago Bears'], DET: ['NFC', 'Detroit Lions'],
+    PHI: ['NFC', 'Philadelphia Eagles'], DAL: ['NFC', 'Dallas Cowboys'], KC: ['AFC', 'Kansas City Chiefs'], BUF: ['AFC', 'Buffalo Bills'],
+    DEN: ['AFC', 'Denver Broncos'], PIT: ['AFC', 'Pittsburgh Steelers']
   };
-  // Real Week 12 lines as saved Wed 11/25, 7:58 PM ET (home team's number; negative = home favoured).
+  // Lines are the real Week 12 numbers saved Wed 11/25 (home team's number; negative = home favoured).
+  // Scores, the live clock and the "was +3.5" move are made up so every color state appears once.
   var SLATE = [
-    { block: 'Thursday, Nov 26 · 4:30 PM ET', games: [{ id: 'g1', away: 'PHI', home: 'DAL', homeSpread: -8.5, total: 47.5, time: '4:30 PM ET' }] },
-    { block: 'Thursday, Nov 26 · 8:20 PM ET', games: [{ id: 'g2', away: 'KC', home: 'BUF', homeSpread: -3, total: 46.5, time: '8:20 PM ET' }] },
-    { block: 'Friday, Nov 27 · 3:00 PM ET', games: [{ id: 'g3', away: 'DEN', home: 'PIT', homeSpread: 3.5, total: 36.5, time: '3:00 PM ET' }] }
+    { id: 'g1', block: 'Wednesday, Nov 25', tag: 'Final', away: 'GB', home: 'LAR', homeSpread: -2.5, state: 'final', score: [20, 27], ats: 'GB', ml: 'LAR' },
+    { id: 'g2', block: 'Thursday, Nov 26', tag: 'LIVE', clock: '8:42 · 3rd', away: 'CHI', home: 'DET', homeSpread: 1.5, state: 'live', score: [17, 14], ats: 'DET', ml: 'CHI' },
+    { id: 'g3', block: 'Thursday, Nov 26', tag: '4:30 PM ET', away: 'PHI', home: 'DAL', homeSpread: -8.5, state: 'open', ats: '', ml: '' },
+    { id: 'g4', block: 'Thursday, Nov 26', tag: '8:20 PM ET', away: 'KC', home: 'BUF', homeSpread: -3, state: 'open', ats: 'KC', ml: 'BUF', seenAway: 3.5 },
+    { id: 'g5', block: 'Friday, Nov 27', tag: '3:00 PM ET', away: 'DEN', home: 'PIT', homeSpread: 3.5, state: 'open', ats: 'DEN', ml: 'DEN' }
   ];
 
   function h(tag, attrs, kids) {
     var el = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
-      if (k === 'text') el.textContent = attrs[k];
-      else if (k === 'class') el.className = attrs[k];
-      else el.setAttribute(k, attrs[k]);
+      var v = attrs[k];
+      if (v === null || v === undefined || v === false) return;
+      if (k === 'text') el.textContent = v; else if (k === 'class') el.className = v; else el.setAttribute(k, v);
     });
     (kids || []).forEach(function (c) { if (c) el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
     return el;
   }
   function nick(abbr) { return TEAMS[abbr][1].split(' ').slice(-1)[0]; }
-  function spreadText(n) { return n === 0 ? 'PK' : (n > 0 ? '+' : '−') + Math.abs(n); }   // a real minus sign, not a hyphen
+  function spreadText(n) { return n === 0 ? 'PK' : (n > 0 ? '+' : '−') + Math.abs(n); }   // a real minus sign
   function logo(abbr) {
-    var t = TEAMS[abbr], img = h('img', { alt: '' });
-    img.addEventListener('error', function () { img.replaceWith(document.createTextNode(abbr)); });
+    var t = TEAMS[abbr], img = h('img', { alt: '' }), slot = h('span', { class: 'logo' }, [img]);
+    img.addEventListener('error', function () { slot.innerHTML = ''; slot.appendChild(h('span', { class: 'fb', text: abbr })); });
     img.src = LOGO + t[0] + '/' + encodeURIComponent(t[1]) + '/' + t[1].toLowerCase().replace(/ /g, '-') + '.svg';
-    return h('span', { class: 'logo' }, [img]);
+    return slot;
   }
-  // One tap picks, a tap on the picked button clears it. The two picks of a game never touch each other.
-  function wire(btn, state, key, value, group, after) {
-    btn.addEventListener('click', function () {
-      state[key] = state[key] === value ? '' : value;
-      group.forEach(function (o) { o.el.setAttribute('aria-pressed', String(state[key] === o.value)); });
-      after();
-    });
-    group.push({ el: btn, value: value });
+  function svgMark(kind) {   // small drawn marks, no emoji: a padlock for a locked winner, a tick, a cross
+    var paths = {
+      lock: '<rect x="2.5" y="6" width="8" height="6" rx="1.2" fill="currentColor"/><path d="M4.3 6V4.4a2.2 2.2 0 0 1 4.4 0V6" fill="none" stroke="currentColor" stroke-width="1.4"/>',
+      ok: '<path d="M2.5 7l2.8 2.8L10.5 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+      bad: '<path d="M3 3.5l7 7M10 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
+    };
+    var span = h('span', { class: 'mark', 'aria-hidden': 'true' });
+    span.innerHTML = '<svg viewBox="0 0 13 13" width="13" height="13">' + paths[kind] + '</svg>';
+    return span;
+  }
+  var toastTimer = null;
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show';
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.className = 'toast'; }, 4200);
   }
 
-  function build(root, variant) {
-    var picks = {}, total = 0;
-    var count = h('p', { class: 'count' });
-    function refresh() {
-      var done = Object.keys(picks).filter(function (id) { return picks[id].ats && picks[id].ml; }).length;
-      count.innerHTML = '';
-      count.appendChild(h('strong', { text: done + ' of ' + total }));
-      count.appendChild(document.createTextNode(' games fully picked'));
-    }
-    SLATE.forEach(function (slot) {
-      root.appendChild(h('h3', { class: 'kickoff-block', text: slot.block }));
-      slot.games.forEach(function (g) {
-        total++;
-        var st = picks[g.id] = { ats: '', ml: '' };
-        var sp = { away: -g.homeSpread, home: g.homeSpread }, atsGroup = [], mlGroup = [];
-        var card = h('div', { class: 'game' });
-        if (variant === 'a') {
-          var board = h('div', { class: 'board' }, [h('span'), h('span', { class: 'col', text: 'Spread' }), h('span', { class: 'col', text: 'Winner' })]);
-          ['away', 'home'].forEach(function (side) {
-            var abbr = g[side];
-            var s = h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', 'aria-label': TEAMS[abbr][1] + ' ' + spreadText(sp[side]) + ' against the spread', text: spreadText(sp[side]) });
-            var w = h('button', { type: 'button', class: 'pick', 'aria-pressed': 'false', 'aria-label': TEAMS[abbr][1] + ' to win', text: 'Win' });
-            wire(s, st, 'ats', abbr, atsGroup, refresh); wire(w, st, 'ml', abbr, mlGroup, refresh);
-            board.appendChild(h('div', { class: 'tm' }, [logo(abbr), h('span', { class: 'who' }, [h('b', { text: abbr }), h('small', { text: nick(abbr) + ' · ' + side })])]));
-            board.appendChild(s); board.appendChild(w);
-          });
-          card.appendChild(board);
-        } else {
-          var spreadRow = h('div', { class: 'pair' }), winRow = h('div', { class: 'pair' });
-          ['away', 'home'].forEach(function (side) {
-            var abbr = g[side];
-            var s = h('button', { type: 'button', class: 'pick team', 'aria-pressed': 'false', 'aria-label': TEAMS[abbr][1] + ' ' + spreadText(sp[side]) + ' against the spread' }, [
-              h('span', { class: 'side', text: side.toUpperCase() }), logo(abbr),
-              h('span', { class: 'who' }, [h('b', { text: abbr + ' ' + spreadText(sp[side]) }), h('small', { text: nick(abbr) })])]);
-            var w = h('button', { type: 'button', class: 'pick slim', 'aria-pressed': 'false', 'aria-label': TEAMS[abbr][1] + ' to win', text: abbr });
-            wire(s, st, 'ats', abbr, atsGroup, refresh); wire(w, st, 'ml', abbr, mlGroup, refresh);
-            spreadRow.appendChild(s); winRow.appendChild(w);
-          });
-          card.appendChild(h('div', { class: 'lbl', text: 'Against the spread' })); card.appendChild(spreadRow);
-          card.appendChild(h('div', { class: 'lbl', text: 'Winner' })); card.appendChild(winRow);
-        }
-        card.appendChild(h('div', { class: 'ou', text: 'Over/under ' + g.total }));
-        root.appendChild(card);
+  function favoriteOf(g) { return g.homeSpread < 0 ? g.home : (g.homeSpread > 0 ? g.away : ''); }
+  function spreadOf(g, abbr) { return abbr === g.home ? g.homeSpread : -g.homeSpread; }
+  function coverOf(g) {
+    var m = g.score[1] + g.homeSpread - g.score[0];
+    return m > 0 ? g.home : (m < 0 ? g.away : 'PUSH');
+  }
+  function winnerOf(g) { return g.score[0] === g.score[1] ? 'TIE' : (g.score[0] > g.score[1] ? g.away : g.home); }
+
+  function renderGame(g, root) {
+    var card = h('div', { class: 'game' });
+    var board = h('div', { class: 'board' }, [h('span'), h('span'), h('span', { class: 'col', text: 'Spread' }), h('span', { class: 'col', text: 'Winner' })]);
+    var fav = favoriteOf(g), open = g.state === 'open', done = g.state === 'final';
+    var favLock = open && fav && g.ats === fav;
+    if (favLock) g.ml = fav;                                    // taking the favorite locks the winner pick
+    [g.away, g.home].forEach(function (abbr, i) {
+      var isAts = g.ats === abbr, isMl = g.ml === abbr;
+      var s = h('button', { type: 'button', class: 'pick', 'aria-pressed': String(isAts),
+        'aria-label': TEAMS[abbr][1] + ' ' + spreadText(spreadOf(g, abbr)) + ' against the spread', text: spreadText(spreadOf(g, abbr)) });
+      var w = h('button', { type: 'button', class: 'pick', 'aria-pressed': String(isMl), 'aria-label': TEAMS[abbr][1] + ' to win', text: 'Win' });
+      if (done) {
+        var cover = coverOf(g), win = winnerOf(g);
+        if (isAts) { s.className += cover === 'PUSH' || cover === abbr ? ' ok' : ' bad'; s.appendChild(svgMark(cover === 'PUSH' || cover === abbr ? 'ok' : 'bad')); }
+        if (isMl) { w.className += win === 'TIE' || win === abbr ? ' ok' : ' bad'; w.appendChild(svgMark(win === 'TIE' || win === abbr ? 'ok' : 'bad')); }
+      }
+      if (!open) { s.className += ' fixed'; w.className += ' fixed'; s.setAttribute('aria-disabled', 'true'); w.setAttribute('aria-disabled', 'true'); }
+      if (favLock) {
+        if (abbr === fav) w.appendChild(svgMark('lock')); else { w.className += ' na'; w.setAttribute('aria-disabled', 'true'); }
+      }
+      s.addEventListener('click', function () {
+        if (!open) { toast(g.state === 'live' ? 'Kicked off. These picks are locked.' : 'This game is final.'); return; }
+        g.ats = g.ats === abbr ? '' : abbr;
+        if (g.ats && g.ats === fav && g.ml !== fav) toast('You took ' + fav + ' ' + spreadText(spreadOf(g, fav)) + ', so ' + fav + ' is your winner too.');
+        redraw();
       });
+      w.addEventListener('click', function () {
+        if (!open) { toast(g.state === 'live' ? 'Kicked off. These picks are locked.' : 'This game is final.'); return; }
+        if (favLock) {
+          var dog = abbr === fav ? (fav === g.home ? g.away : g.home) : abbr;
+          toast('Your winner is locked to ' + fav + ' because you took ' + fav + ' ' + spreadText(spreadOf(g, fav)) + '. Take ' + dog + ' ' + spreadText(spreadOf(g, dog)) + ' to choose the winner yourself.');
+          return;
+        }
+        g.ml = g.ml === abbr ? '' : abbr;
+        redraw();
+      });
+      board.appendChild(h('div', { class: 'tm' }, [logo(abbr), h('span', { class: 'who' }, [h('b', { text: abbr }), h('small', { text: nick(abbr) + ' · ' + (i === 0 ? 'away' : 'home') })])]));
+      var lost = done && winnerOf(g) !== 'TIE' && winnerOf(g) !== abbr;
+      board.appendChild(g.score ? h('span', { class: 'score' + (lost ? ' lost' : ''), text: String(g.score[i]) }) : h('span'));
+      board.appendChild(s); board.appendChild(w);
     });
-    root.appendChild(count);
-    refresh();
+    card.appendChild(board);
+    if (done) {
+      var c = coverOf(g), wn = winnerOf(g);
+      card.appendChild(h('p', { class: 'note result', text: wn + ' won ' + Math.max(g.score[0], g.score[1]) + '–' + Math.min(g.score[0], g.score[1]) +
+        (c === 'PUSH' ? '. Landed on the spread: everyone gets the spread point.' : (c === wn ? ' and covered ' + spreadText(spreadOf(g, wn)) + '.' : ', but ' + c + ' covered ' + spreadText(spreadOf(g, c)) + '.')) }));
+    } else if (g.state === 'live') {
+      card.appendChild(h('p', { class: 'note', text: 'Kicked off. Picks are locked at ' + fav + ' ' + spreadText(spreadOf(g, fav)) + '.' }));
+    } else {
+      if (favLock) card.appendChild(h('p', { class: 'note' }, [h('strong', { text: fav + ' ' + spreadText(spreadOf(g, fav)) }), ' locks ' + fav + ' as your winner.']));
+      if (g.seenAway !== undefined && g.ats === g.away && g.seenAway !== spreadOf(g, g.away)) {
+        card.appendChild(h('p', { class: 'note' }, ['Line moved since you picked: ' + g.away + ' was ', h('strong', { text: spreadText(g.seenAway) }), ', now ', h('strong', { text: spreadText(spreadOf(g, g.away)) }), '.']));
+      }
+    }
+    root.appendChild(card);
   }
 
-  build(document.getElementById('opt-a'), 'a');
-  build(document.getElementById('opt-b'), 'b');
+  function redraw() {
+    var root = document.getElementById('cards'), y = window.pageYOffset, block = '';
+    root.innerHTML = '';
+    SLATE.forEach(function (g) {
+      var head = g.block + '|' + g.tag;
+      if (head !== block) {
+        var tag = g.state === 'live' ? h('span', null, [h('span', { class: 'live-flag', text: 'LIVE' }), h('small', { text: '  ' + g.clock })]) : h('small', { text: g.tag });
+        root.appendChild(h('h3', { class: 'kickoff-block' }, [h('span', { text: g.block }), tag]));
+        block = head;
+      }
+      renderGame(g, root);
+    });
+    var open = SLATE.filter(function (g) { return g.state === 'open'; });
+    var full = SLATE.filter(function (g) { return g.ats && g.ml; }).length;
+    var s = document.getElementById('summary');
+    s.innerHTML = ''; s.appendChild(h('strong', { text: full + ' of ' + SLATE.length })); s.appendChild(document.createTextNode(' games picked · 1–1 so far'));
+    document.getElementById('save-count').textContent = full + ' of ' + SLATE.length + ' games picked';
+    window.scrollTo(0, y);
+    return open;
+  }
+
+  function setScheme(name) {
+    document.body.setAttribute('data-scheme', name);
+    Array.prototype.forEach.call(document.querySelectorAll('.chooser button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-s') === name)); });
+    try { history.replaceState(null, '', '#' + name); } catch (e) { /* ignore */ }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.chooser button'), function (b) {
+    b.addEventListener('click', function () { setScheme(b.getAttribute('data-s')); });
+  });
+  document.getElementById('save-btn').addEventListener('click', function () { toast('Nothing is saved here. This page only shows colors.'); });
+  var wanted = String(location.hash || '').replace('#', '');
+  if (wanted === 'turf' || wanted === 'tote' || wanted === 'day') setScheme(wanted);
+  redraw();
 })();
 </script>
 </body>
